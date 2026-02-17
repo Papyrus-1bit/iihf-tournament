@@ -1,70 +1,122 @@
-# Getting Started with Create React App
+# IIHF Tournament Simulator
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A local, single-page simulator for an IIHF-style tournament. The app supports group setup, drag-and-drop team assignment, a day-by-day calendar, playoffs, standings, and rating updates. It also stores saves locally and supports JSON export/import.
 
-## Available Scripts
+## Features
+- Group setup with sliders and manual drag-and-drop placement
+- Auto-distribution by strength with a per-group team limit
+- Calendar-based schedule with day locking and quick simulation
+- Manual score input, OT/SO handling, and result markers
+- Playoffs (R16, QF, SF, Final, 3rd place) with seeding rules
+- Standings tab with overall or per-group view
+- Rating table with OVR and delta indicators
+- Player team selection highlighting
+- Local saves plus JSON export/import (drag-and-drop supported)
 
-In the project directory, you can run:
+## Tech Stack
+- React 18 + Vite + TypeScript
+- Chakra UI (current UI library)
+- FastAPI backend for country data
 
-### `npm start`
+## Project Structure
+- `src/` - frontend source
+- `src/components/` - UI components
+- `src/scheduling.ts` - match date scheduling rules
+- `src/simulation.ts` - match simulation logic
+- `src/standings.ts` - standings and points logic
+- `backend/` - FastAPI app and country data
+- `public/svg/` - flag assets (SVG)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Data Files
+- `backend/countries.json` stores team name, rating_points, and ovr for the top 24 + RU/BY.
+- Flags are loaded from `public/svg/{code}.svg` using ISO country codes.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Setup
 
-### `npm test`
+### Backend
+```
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install fastapi uvicorn numpy
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Frontend
+```
+cd iihf-tournament
+npm install
+npm run dev
+```
 
-### `npm run build`
+Optional env:
+- `VITE_API_BASE` (default: `http://localhost:8000`)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Usage
+1. Open the `Tournament` tab and set group parameters.
+2. Drag teams into groups, or use auto-distribution.
+3. Click team cards to mark player teams.
+4. Choose playoff seeding and bracket rules.
+5. Create the tournament to generate schedule.
+6. Use the calendar to play/simulate matches day-by-day.
+7. Check standings and playoff tabs for progress.
+8. Ratings update after tournament completion. Use reset to restore defaults.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Saves
+- Save stores the current tournament snapshot in localStorage.
+- Export writes a JSON file. Import accepts JSON files (button or drag-and-drop).
+- Storage keys:
+  - `iihfTournamentSaves`
+  - `iihfRatings`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Example export payload:
+```
+{
+  "version": 1,
+  "savedAt": "2026-02-17T12:00:00.000Z",
+  "data": {
+    "tournamentName": "IIHF 2026",
+    "groups": [],
+    "unassigned": [],
+    "playoffMatches": [],
+    "playoffSeeding": "overall",
+    "playoffBracketRule": "seeded",
+    "teamsPerGroupLimit": 4,
+    "playerTeamIds": [],
+    "isTournamentCreated": false,
+    "tournamentBaseRanks": {},
+    "ratingsCommitted": false
+  }
+}
+```
 
-### `npm run eject`
+## Versioning and Workflow
+- Use SemVer: `MAJOR.MINOR.PATCH`.
+- Keep a `CHANGELOG.md` with an `Unreleased` section.
+- Work on feature branches and open merge requests.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Suggested branch names:
+- `feature/<topic>`
+- `fix/<topic>`
+- `docs/<topic>`
+- `chore/<topic>`
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Suggested commit style:
+- `feat: ...`
+- `fix: ...`
+- `docs: ...`
+- `chore: ...`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Example workflow:
+```
+git checkout -b feature/playoff-bracket
+# work...
+git add .
+git commit -m "feat: add playoff bracket view"
+git push -u origin feature/playoff-bracket
+# open MR via GitHub/GitLab UI or CLI
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Design Direction (Planned)
+- Swiss/International Typographic Style: strong grid, asymmetric layout, sans-serif typography, clear hierarchy, minimal ornamentation.
+- A custom UI kit will live in `src/ui/` (separate branch).
