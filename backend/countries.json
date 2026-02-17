@@ -1,0 +1,117 @@
+{
+  "RU": {
+    "name": "Россия",
+    "rating_points": 4030,
+    "ovr": 90
+  },
+  "US": {
+    "name": "США",
+    "rating_points": 3985,
+    "ovr": 89
+  },
+  "CH": {
+    "name": "Швейцария",
+    "rating_points": 3975,
+    "ovr": 89
+  },
+  "CA": {
+    "name": "Канада",
+    "rating_points": 3935,
+    "ovr": 88
+  },
+  "SE": {
+    "name": "Швеция",
+    "rating_points": 3915,
+    "ovr": 88
+  },
+  "CZ": {
+    "name": "Чехия",
+    "rating_points": 3860,
+    "ovr": 87
+  },
+  "FI": {
+    "name": "Финляндия",
+    "rating_points": 3780,
+    "ovr": 86
+  },
+  "DE": {
+    "name": "Германия",
+    "rating_points": 3710,
+    "ovr": 85
+  },
+  "DK": {
+    "name": "Дания",
+    "rating_points": 3625,
+    "ovr": 83
+  },
+  "SK": {
+    "name": "Словакия",
+    "rating_points": 3595,
+    "ovr": 83
+  },
+  "LV": {
+    "name": "Латвия",
+    "rating_points": 3585,
+    "ovr": 83
+  },
+  "AT": {
+    "name": "Австрия",
+    "rating_points": 3465,
+    "ovr": 81
+  },
+  "NO": {
+    "name": "Норвегия",
+    "rating_points": 3370,
+    "ovr": 79
+  },
+  "KZ": {
+    "name": "Казахстан",
+    "rating_points": 3265,
+    "ovr": 77
+  },
+  "FR": {
+    "name": "Франция",
+    "rating_points": 3255,
+    "ovr": 77
+  },
+  "BY": {
+    "name": "Беларусь",
+    "rating_points": 3205,
+    "ovr": 76
+  },
+  "SI": {
+    "name": "Словения",
+    "rating_points": 3180,
+    "ovr": 76
+  },
+  "HU": {
+    "name": "Венгрия",
+    "rating_points": 3170,
+    "ovr": 76
+  },
+  "GB": {
+    "name": "Великобритания",
+    "rating_points": 3100,
+    "ovr": 75
+  },
+  "IT": {
+    "name": "Италия",
+    "rating_points": 3025,
+    "ovr": 73
+  },
+  "PL": {
+    "name": "Польша",
+    "rating_points": 2990,
+    "ovr": 73
+  },
+  "JP": {
+    "name": "Япония",
+    "rating_points": 2860,
+    "ovr": 71
+  },
+  "UA": {
+    "name": "Украина",
+    "rating_points": 2820,
+    "ovr": 70
+  }
+}
