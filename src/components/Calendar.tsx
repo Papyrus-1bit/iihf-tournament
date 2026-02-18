@@ -1,5 +1,6 @@
 import React, { useMemo, useRef } from "react";
 import { Box, Button, Heading, Text } from "@chakra-ui/react";
+import { FiChevronLeft, FiChevronRight, FiPlay } from "react-icons/fi";
 import { Group, Match } from "../types";
 import MatchCard from "./MatchCard";
 import { simulateMatchResult } from "../simulation";
@@ -84,10 +85,10 @@ const Calendar: React.FC<Props> = ({ groups, playoffMatches, onUpdateMatch, play
         <Heading size="sm">Календарь</Heading>
         <Box display="flex" gap={2}>
           <Button size="xs" variant="outline" onClick={() => scrollByAmount("left")} aria-label="Назад">
-            ◀
+            <FiChevronLeft />
           </Button>
           <Button size="xs" variant="outline" onClick={() => scrollByAmount("right")} aria-label="Вперёд">
-            ▶
+            <FiChevronRight />
           </Button>
         </Box>
       </Box>
@@ -98,6 +99,7 @@ const Calendar: React.FC<Props> = ({ groups, playoffMatches, onUpdateMatch, play
         overflowX="auto"
         pb={2}
         scrollSnapType="x mandatory"
+        className="calendar-strip"
       >
         {orderedDates.map((date) => {
           const matches = matchesByDate.get(date) ?? [];
@@ -118,17 +120,16 @@ const Calendar: React.FC<Props> = ({ groups, playoffMatches, onUpdateMatch, play
               minW="280px"
               flex="0 0 280px"
               p={3}
-              borderWidth={1}
-              borderRadius="md"
-              borderColor={isActiveDay ? "blue.400" : isUpcoming ? "gray.200" : "gray.100"}
-              background={isActiveDay ? "blue.50" : isUpcoming ? "gray.50" : "white"}
               scrollSnapAlign="start"
+              className="calendar-day"
+              data-active={isActiveDay}
+              data-upcoming={isUpcoming}
             >
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                 <Heading size="xs">{getDisplayDate(date)}</Heading>
                 {allowSimulateDay && (
                   <Button size="xs" variant="outline" onClick={() => handleSimulateDay(date)} aria-label="Симулировать день">
-                    ⏵
+                    <FiPlay />
                   </Button>
                 )}
               </Box>

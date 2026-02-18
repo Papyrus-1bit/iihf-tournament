@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { Box, Button, HStack, Text } from "@chakra-ui/react";
+import { FiPlay } from "react-icons/fi";
 import { Match } from "../types";
 import { simulateMatchResult } from "../simulation";
 import Flag from "./Flag";
@@ -152,9 +153,9 @@ const MatchCard: React.FC<Props> = ({
       borderRadius="md"
       p={2}
       mb={2}
-      borderColor={isPlayerMatch ? "green.400" : "gray.200"}
-      background={isPlayerMatch ? "green.50" : "white"}
       opacity={isLocked ? 0.6 : 1}
+      className="match-card"
+      data-player={isPlayerMatch}
     >
       <Box display="flex" alignItems="center" gap={2} mb={1} whiteSpace="nowrap">
         {match.stage === "group" && match.groupName && (
@@ -260,7 +261,7 @@ const MatchCard: React.FC<Props> = ({
           disabled={!simulateEnabled}
           aria-label="Симулировать матч"
         >
-          ▶
+          <FiPlay />
         </Button>
       </HStackAny>
     </Box>

@@ -48,7 +48,7 @@ const PlayoffBracket: FC<Props> = ({ matches, playerTeamIds = [] }) => {
         const roundMatches = matchesByRound.get(round) ?? [];
         if (roundMatches.length === 0) return null;
         return (
-          <Box key={round} minW="240px" borderWidth={1} borderRadius="md" p={3}>
+          <Box key={round} minW="240px" p={3} className="ui-panel">
             <Heading size="xs" mb={2}>{label}</Heading>
             <Box display="flex" flexDirection="column" gap={2}>
               {roundMatches.map((match) => {
@@ -60,10 +60,9 @@ const PlayoffBracket: FC<Props> = ({ matches, playerTeamIds = [] }) => {
                 return (
                   <Box
                     key={match.id}
-                    borderWidth={1}
-                    borderRadius="md"
                     p={2}
-                    background={homeSelected || awaySelected ? "green.50" : "white"}
+                    className="ui-card"
+                    data-player={homeSelected || awaySelected}
                   >
                     <Box display="flex" alignItems="center" justifyContent="space-between">
                       <Box display="flex" alignItems="center" gap={2}>
