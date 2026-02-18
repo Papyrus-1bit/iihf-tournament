@@ -17,6 +17,8 @@ interface Props {
   baseRanks?: Record<string, number>;
   playerTeamIds?: string[];
   podium?: Record<string, PodiumCounts>;
+  selectedTeamId?: string | null;
+  onSelectTeam?: (teamId: string) => void;
 }
 
 const emptyPodium: PodiumCounts = { gold: 0, silver: 0, bronze: 0, finals: 0 };
@@ -26,6 +28,8 @@ const RatingTable: FC<Props> = ({
   baseRanks = {},
   playerTeamIds = [],
   podium = {},
+  selectedTeamId,
+  onSelectTeam,
 }) => {
   if (ratings.length === 0) {
     return <Text>Нет данных по рейтингу</Text>;
@@ -41,7 +45,7 @@ const RatingTable: FC<Props> = ({
           <Box textAlign="center">1</Box>
           <Box textAlign="center">2</Box>
           <Box textAlign="center">3</Box>
-          <Box textAlign="center">Финалы</Box>
+          <Box textAlign="center">Фин</Box>
           <Box textAlign="left">Рейтинг</Box>
         </Box>
         {ratings.map((team, index) => {
@@ -53,12 +57,17 @@ const RatingTable: FC<Props> = ({
           const highlight = playerTeamIds.includes(team.id)
             ? { background: "rgba(80, 200, 120, 0.12)" }
             : undefined;
+          const isSelected = selectedTeamId === team.id;
           return (
             <Box
               key={team.id}
               py={1}
               style={highlight}
               className="table-row rating-row"
+              data-selected={isSelected}
+              data-testid={`rating-row-${team.id}`}
+              onClick={() => onSelectTeam?.(team.id)}
+              cursor={onSelectTeam ? "pointer" : "default"}
             >
               <Box>{currentRank}</Box>
               <Box display="flex" alignItems="center" gap={2}>

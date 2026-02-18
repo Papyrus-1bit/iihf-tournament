@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 60" role="img" aria-label="IIHF">
+  <rect width="240" height="60" fill="none"/>
+  <g fill="#ffffff">
+    <rect x="0" y="10" width="14" height="40"/>
+    <rect x="22" y="10" width="14" height="40"/>
+    <rect x="44" y="10" width="14" height="40"/>
+    <rect x="76" y="10" width="14" height="40"/>
+    <rect x="98" y="10" width="14" height="40"/>
+    <rect x="130" y="10" width="14" height="40"/>
+    <rect x="152" y="10" width="14" height="40"/>
+    <rect x="174" y="10" width="14" height="40"/>
+    <rect x="196" y="10" width="14" height="40"/>
+    <rect x="218" y="10" width="14" height="40"/>
+  </g>
+  <text x="0" y="46" font-family="Barlow Condensed, Barlow, sans-serif" font-size="36" font-weight="700" letter-spacing="4" fill="#ffffff">
+    IIHF
+  </text>
+</svg>

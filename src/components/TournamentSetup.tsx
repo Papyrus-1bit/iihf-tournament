@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Text } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import { Team, Group } from "../types";
 
 interface Props {
@@ -61,13 +61,18 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate, embedded = false }) => {
     onCreate(newGroups, unassigned, teamsPerGroup);
   };
 
+  useEffect(() => {
+    if (teams.length === 0) return;
+    handleCreate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numGroups, teamsPerGroup, teams.length]);
+
   const content = (
     <>
       <Box display="flex" alignItems="center" gap={4} flexWrap="wrap">
         <Box flex="1" minW="220px">
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
             <Text fontSize="sm" color="gray.500">Количество групп</Text>
-            <Text fontSize="sm" fontWeight="bold">{numGroups}</Text>
           </Box>
           <input
             type="number"
@@ -87,7 +92,6 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate, embedded = false }) => {
         <Box flex="1" minW="220px">
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
             <Text fontSize="sm" color="gray.500">Команд в группе</Text>
-            <Text fontSize="sm" fontWeight="bold">{teamsPerGroup}</Text>
           </Box>
           <input
             type="number"
@@ -106,14 +110,6 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate, embedded = false }) => {
             style={{ width: "100%" }}
           />
         </Box>
-        <Button
-          size="sm"
-          colorScheme="blue"
-          onClick={handleCreate}
-          disabled={teams.length === 0}
-        >
-          Создать группы
-        </Button>
       </Box>
     </>
   );

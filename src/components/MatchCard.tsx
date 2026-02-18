@@ -3,7 +3,7 @@ import { Box, Text } from "@chakra-ui/react";
 import { FiPlay } from "react-icons/fi";
 import { Match } from "../types";
 import { simulateMatchResult } from "../simulation";
-import Flag from "./Flag";
+import FederationLogo from "./FederationLogo";
 import { IconButton } from "../ui";
 
 interface Props {
@@ -143,6 +143,7 @@ const MatchCard: React.FC<Props> = ({
   };
 
   if (compact) {
+    const extraLabel = match.shootout ? "Б" : match.overtime ? "ОТ" : null;
     return (
       <Box
         borderWidth={1}
@@ -156,15 +157,40 @@ const MatchCard: React.FC<Props> = ({
       >
         <Box className="match-compact-row">
           <Box className="match-compact-team">
-            <Flag code={match.home.flagCode} name={match.home.name} size={24} />
+            <FederationLogo code={match.home.flagCode} name={match.home.name} size={26} />
             <span>{getShortName(match.home.name)}</span>
           </Box>
           <span className="match-compact-score">
-            {match.homeScore ?? 0}-{match.awayScore ?? 0}
+            <input
+              className="match-score-input match-score-input--compact"
+              value={homeScore}
+              onChange={(e) => {
+                const next = e.target.value;
+                setHomeScore(next);
+                tryUpdateScores(next, awayScore, isOvertime, isShootout);
+              }}
+              disabled={!manualEnabled}
+              inputMode="numeric"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            <span className="match-score-sep">-</span>
+            <input
+              className="match-score-input match-score-input--compact"
+              value={awayScore}
+              onChange={(e) => {
+                const next = e.target.value;
+                setAwayScore(next);
+                tryUpdateScores(homeScore, next, isOvertime, isShootout);
+              }}
+              disabled={!manualEnabled}
+              inputMode="numeric"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            {extraLabel && <span className="match-compact-ot">{extraLabel}</span>}
           </span>
-          <Box className="match-compact-team">
+          <Box className="match-compact-team right">
             <span>{getShortName(match.away.name)}</span>
-            <Flag code={match.away.flagCode} name={match.away.name} size={24} />
+            <FederationLogo code={match.away.flagCode} name={match.away.name} size={26} />
           </Box>
           <IconButton
             onClick={handleSimulate}
@@ -214,7 +240,7 @@ const MatchCard: React.FC<Props> = ({
       </Box>
       <Box className="match-card-main">
         <Box className="match-team">
-          <Flag code={match.home.flagCode} name={match.home.name} size={36} />
+          <FederationLogo code={match.home.flagCode} name={match.home.name} size={40} />
           <Box>
             <Text className="match-team-name">{getShortName(match.home.name)}</Text>
             <Text className="match-team-meta">
@@ -258,7 +284,7 @@ const MatchCard: React.FC<Props> = ({
               {match.away.ovr ? `OVR ${match.away.ovr}` : "OVR —"}
             </Text>
           </Box>
-          <Flag code={match.away.flagCode} name={match.away.name} size={36} />
+          <FederationLogo code={match.away.flagCode} name={match.away.name} size={40} />
         </Box>
       </Box>
       <Box className="match-card-controls">

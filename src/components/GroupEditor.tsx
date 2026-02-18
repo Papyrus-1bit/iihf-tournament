@@ -1,5 +1,5 @@
 import type { FC, DragEvent, Dispatch, SetStateAction } from "react";
-import { Box, Button, Heading, Text } from "@chakra-ui/react";
+import { Box, Button, Text } from "@chakra-ui/react";
 import { Group, Team } from "../types";
 import Flag from "./Flag";
 
@@ -143,34 +143,35 @@ const GroupEditor: FC<Props> = ({
 
   return (
     <Box mb={4}>
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-        <Heading size="md" className="swiss-headline">Распределение команд по группам</Heading>
+      <Text className="ui-kicker">Настройка состава</Text>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} gap={2}>
+        <Text className="ui-section-title">Распределение команд по группам</Text>
         <Button size="sm" variant="outline" onClick={handleAutoDistribute}>
           Автораспределение
         </Button>
       </Box>
+      <Text fontSize="sm" color="gray.500" mb={3}>
+        Перетаскивайте команды между группами или в блок «Нераспределённые».
+      </Text>
 
       <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(220px, 1fr))" gap={3}>
         {groups.map((group, gi) => (
           <Box
             key={group.id}
             p={3}
-            borderWidth={1}
-            borderRadius="md"
-            borderStyle="dashed"
             minH="160px"
             onDrop={handleDrop(group.id)}
             onDragOver={handleDragOver}
             className="group-panel"
           >
-            <Box mb={2}>
+            <Box mb={2} display="flex" alignItems="center" justifyContent="space-between" gap={2}>
               <input
                 value={group.name}
                 onChange={(e) => handleGroupNameChange(gi, e.target.value)}
                 className="ui-input"
                 style={{ width: "100%" }}
               />
-              <Text fontSize="sm" color="gray.500" mb={1}>
+              <Text fontSize="sm" color="gray.500" whiteSpace="nowrap">
                 {group.teams.length} команд
               </Text>
             </Box>
@@ -179,8 +180,8 @@ const GroupEditor: FC<Props> = ({
             )}
             <Box
               display="flex"
-              flexWrap={lineCards ? "nowrap" : "wrap"}
-              flexDirection={lineCards ? "column" : "row"}
+              flexWrap={lineCards ? "wrap" : "wrap"}
+              flexDirection="row"
               gap={2}
               className={lineCards ? "team-list team-list--line" : "team-list"}
             >
@@ -192,22 +193,21 @@ const GroupEditor: FC<Props> = ({
       <Box
         mb={4}
         p={3}
-        borderWidth={1}
-        borderRadius="md"
-        borderStyle="dashed"
         minH="120px"
         onDrop={handleDrop("unassigned")}
         onDragOver={handleDragOver}
         className="group-panel"
       >
-        <Heading size="sm" mb={2}>Нераспределённые команды</Heading>
+        <Text className="ui-section-title" style={{ marginBottom: 8 }}>
+          Нераспределённые команды
+        </Text>
         {unassigned.length === 0 && (
           <Text fontSize="sm" color="gray.500">Перетащите команды сюда, чтобы удалить их из групп.</Text>
         )}
         <Box
           display="flex"
-          flexWrap={lineCards ? "nowrap" : "wrap"}
-          flexDirection={lineCards ? "column" : "row"}
+          flexWrap={lineCards ? "wrap" : "wrap"}
+          flexDirection="row"
           gap={2}
           className={lineCards ? "team-list team-list--line" : "team-list"}
         >

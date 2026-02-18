@@ -239,12 +239,11 @@ const Calendar: React.FC<Props> = ({
                     >
                       {isOtherExpanded ? "Скрыть другие игры" : "Другие игры"}
                     </Button>
-                    {isOtherExpanded && (
+                    {isOtherExpanded && isActiveDay && (
                       <Button
                         size="xs"
                         variant="outline"
                         onClick={() => handleSimulateDay(date, otherMatches)}
-                        disabled={!isActiveDay}
                       >
                         Симулировать другие игры
                       </Button>

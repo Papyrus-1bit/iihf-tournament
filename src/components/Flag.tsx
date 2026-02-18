@@ -8,14 +8,19 @@ interface Props {
 
 const Flag: FC<Props> = ({ code, name, size = 24 }) => {
   const src = `/svg/${code.toLowerCase()}.svg`;
-  const height = Math.round(size * 0.7);
+  const height = size;
   return (
     <img
       src={src}
       alt={name}
-      width={size}
       height={height}
-      style={{ objectFit: "cover", borderRadius: "2px", verticalAlign: "middle" }}
+      style={{
+        width: "auto",
+        height,
+        objectFit: "contain",
+        borderRadius: "2px",
+        verticalAlign: "middle",
+      }}
       loading="lazy"
     />
   );
