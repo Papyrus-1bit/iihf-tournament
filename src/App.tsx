@@ -6,6 +6,7 @@ import Calendar from "./components/Calendar";
 import StandingsTable from "./components/StandingsTable";
 import RatingTable from "./components/RatingTable";
 import PlayoffBracket from "./components/PlayoffBracket";
+import { Tab as UiTab, Tabs as UiTabs, UiRoot } from "./ui";
 import { Group, Match, MatchRound, Team } from "./types";
 import { fetchCountries } from "./api";
 import {
@@ -745,7 +746,8 @@ function App() {
     Object.keys(tournamentBaseRanks).length > 0 ? tournamentBaseRanks : buildRankMap(baseRatings);
   
   return (
-    <Box p={4}>
+    <UiRoot>
+      <Box p={4} maxW="1120px" mx="auto">
       <Heading
         mb={4}
         cursor="pointer"
@@ -753,19 +755,19 @@ function App() {
       >
         {tournamentName.trim() || "IIHF турнир"}
       </Heading>
-      <Box mb={4} display="flex" gap={2} flexWrap="wrap">
-        {tabs.map((tab) => (
-          <Button
-            key={tab.id}
-            size="sm"
-            variant={activeTab === tab.id ? "solid" : "outline"}
-            colorScheme={activeTab === tab.id ? "blue" : "gray"}
-            onClick={() => setActiveTab(tab.id)}
-            disabled={tab.disabled}
-          >
-            {tab.label}
-          </Button>
-        ))}
+      <Box mb={4}>
+        <UiTabs>
+          {tabs.map((tab) => (
+            <UiTab
+              key={tab.id}
+              active={activeTab === tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              disabled={tab.disabled}
+            >
+              {tab.label}
+            </UiTab>
+          ))}
+        </UiTabs>
       </Box>
       {teamsLoading && <Text mb={4}>Загрузка команд...</Text>}
       {teamsError && <Text mb={4} color="red.500">{teamsError}</Text>}
@@ -1055,7 +1057,8 @@ function App() {
           <RatingTable ratings={ratings} baseRanks={displayBaseRanks} playerTeamIds={playerTeamIds} />
         </>
       )}
-    </Box>
+      </Box>
+    </UiRoot>
   );
 }
 
