@@ -42,3 +42,41 @@ def test_select_team_updates_summary(driver, app_url):
         lambda d: d.find_element(By.CSS_SELECTOR, "[data-testid='team-summary-name']").text
         != initial_name
     )
+
+
+def test_create_tournament_and_enter_score(driver, app_url):
+    driver.get(app_url)
+    wait = WebDriverWait(driver, 20)
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='tournament-hero']")))
+    new_tournament = wait.until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, "[aria-label='Новый турнир']"))
+    )
+    new_tournament.click()
+    modal = wait.until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "[data-testid='tournament-modal']"))
+    )
+    assert modal.is_displayed()
+
+    # Wait for create tournament button to appear and click it
+    create_button = wait.until(
+        EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Создать турнир')]"))
+    )
+    create_button.click()
+
+    # Calendar should appear
+    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".calendar-strip")))
+
+    # Enter a score in the first visible match inputs
+    score_inputs = wait.until(
+        EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".match-score-input"))
+    )
+    if len(score_inputs) >= 2:
+        score_inputs[0].click()
+        score_inputs[0].clear()
+        score_inputs[0].send_keys("3")
+        score_inputs[1].click()
+        score_inputs[1].clear()
+        score_inputs[1].send_keys("1")
+        # Verify input values updated
+        assert score_inputs[0].get_attribute("value") == "3"
+        assert score_inputs[1].get_attribute("value") == "1"
