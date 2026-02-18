@@ -1027,11 +1027,11 @@ function App() {
       {teamsLoading && <Text>Загрузка команд...</Text>}
       {teamsError && <Text color="red.500">{teamsError}</Text>}
       <Box className="ui-stack">
-        <Box className="swiss-hero" data-testid="tournament-hero">
+        <Box className="hero-bar" data-testid="tournament-hero">
           <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
             <Box display="flex" flexDirection="column" gap={2}>
               <img
-                src="/iihf-logo.png"
+                src="/iihf-logo.svg"
                 alt="IIHF"
                 className="hero-logo"
                 loading="lazy"
@@ -1068,30 +1068,30 @@ function App() {
               )}
             </Box>
           </Box>
-          {isTournamentCreated && (
-            <>
-              <Box className="swiss-facts">
-                <StatCard label="Команд" value={totalTeams} />
-                <StatCard label="Групп" value={groupCount || "—"} />
-                <StatCard label="Нераспр." value={unassignedCount} />
-                <StatCard label="Сетка" value={bracketSize >= 4 ? bracketSize : "—"} />
-              </Box>
-              {participantTeams.length > 0 && (
-                <Box className="participant-strip">
-                  {participantTeams.map((team) => (
-                    <span
-                      key={team.id}
-                      className="participant-flag"
-                      data-eliminated={eliminatedTeamIds.has(team.id)}
-                    >
-                      <Flag code={team.flagCode} name={team.name} size={26} />
-                    </span>
-                  ))}
-                </Box>
-              )}
-            </>
-          )}
         </Box>
+        {isTournamentCreated && (
+          <Box className="hero-stats">
+            <Box className="swiss-facts">
+              <StatCard label="Команд" value={totalTeams} />
+              <StatCard label="Групп" value={groupCount || "—"} />
+              <StatCard label="Нераспр." value={unassignedCount} />
+              <StatCard label="Сетка" value={bracketSize >= 4 ? bracketSize : "—"} />
+            </Box>
+            {participantTeams.length > 0 && (
+              <Box className="participant-strip">
+                {participantTeams.map((team) => (
+                  <span
+                    key={team.id}
+                    className="participant-flag"
+                    data-eliminated={eliminatedTeamIds.has(team.id)}
+                  >
+                    <Flag code={team.flagCode} name={team.name} size={26} />
+                  </span>
+                ))}
+              </Box>
+            )}
+          </Box>
+        )}
         {!isTournamentCreated && groups.length > 0 && teams.length > 0 && (
           <Text fontSize="sm" color="gray.600">
             Распределение команд доступно в настройках турнира.

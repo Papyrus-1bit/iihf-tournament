@@ -71,7 +71,9 @@ const RatingTable: FC<Props> = ({
             >
               <Box>{currentRank}</Box>
               <Box display="flex" alignItems="center" gap={2}>
-                <Flag code={team.flagCode} name={team.name} />
+                <span className="rating-flag">
+                  <Flag code={team.flagCode} name={team.name} size={18} />
+                </span>
                 <Text fontWeight="bold">{team.name}</Text>
               </Box>
               <Box textAlign="center">{team.ovr !== undefined ? team.ovr : "—"}</Box>

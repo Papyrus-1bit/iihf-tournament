@@ -132,10 +132,24 @@
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
 }
 
+.hero-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.hero-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .hero-logo {
   width: 140px;
   height: auto;
   display: block;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.6));
 }
 
 .swiss-hero::after {
@@ -606,6 +620,19 @@
 .participant-flag[data-eliminated="true"] img {
   filter: grayscale(1) brightness(0.6);
   opacity: 0.45;
+}
+
+.rating-flag {
+  width: 34px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rating-flag img {
+  height: 18px;
+  width: auto;
 }
 
 .match-compact-row {
