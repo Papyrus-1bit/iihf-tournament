@@ -633,7 +633,7 @@ function App() {
     let shootoutGames = 0;
     const form: Array<"W" | "L" | "T"> = [];
     teamMatches.forEach((match) => {
-      const isHome = match.home.id === topTeam.id;
+      const isHome = match.home.id === selectedTeam.id;
       const goalsFor = isHome ? match.homeScore ?? 0 : match.awayScore ?? 0;
       const goalsAgainst = isHome ? match.awayScore ?? 0 : match.homeScore ?? 0;
       if (goalsFor > goalsAgainst) {
