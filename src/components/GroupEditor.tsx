@@ -131,6 +131,8 @@ const GroupEditor: FC<Props> = ({
       display="inline-flex"
       alignItems="center"
       gap={2}
+      className="team-pill"
+      data-selected={isSelected}
     >
       <Flag code={team.flagCode} name={team.name} /> {team.name}
       {ovrLabel && (
@@ -164,6 +166,7 @@ const GroupEditor: FC<Props> = ({
             minH="160px"
             onDrop={handleDrop(group.id)}
             onDragOver={handleDragOver}
+            className="panel"
           >
             <Box mb={2}>
               <input
@@ -193,6 +196,7 @@ const GroupEditor: FC<Props> = ({
         minH="120px"
         onDrop={handleDrop("unassigned")}
         onDragOver={handleDragOver}
+        className="panel"
       >
         <Heading size="sm" mb={2}>Нераспределённые команды</Heading>
         {unassigned.length === 0 && (

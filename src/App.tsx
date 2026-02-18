@@ -745,21 +745,23 @@ function App() {
     Object.keys(tournamentBaseRanks).length > 0 ? tournamentBaseRanks : buildRankMap(baseRatings);
   
   return (
-    <Box p={4}>
+    <Box className="app-shell">
       <Heading
         mb={4}
         cursor="pointer"
         onClick={() => setIsEditingTitle(true)}
+        className="app-title"
       >
         {tournamentName.trim() || "IIHF турнир"}
       </Heading>
-      <Box mb={4} display="flex" gap={2} flexWrap="wrap">
+      <Box mb={4} className="app-tabs">
         {tabs.map((tab) => (
           <Button
             key={tab.id}
             size="sm"
-            variant={activeTab === tab.id ? "solid" : "outline"}
-            colorScheme={activeTab === tab.id ? "blue" : "gray"}
+            variant="ghost"
+            className="app-tab"
+            data-active={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
             disabled={tab.disabled}
           >
@@ -771,10 +773,10 @@ function App() {
       {teamsError && <Text mb={4} color="red.500">{teamsError}</Text>}
       {activeTab === "tournament" && (
         <>
-          <Box mb={4} borderWidth={1} borderRadius="md" p={3}>
+          <Box mb={4} p={3} className="panel">
             <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
               <Box>
-                <Text fontWeight="bold" mb={1}>Данные турнира</Text>
+                <Text fontWeight="bold" mb={1} className="panel-title">Данные турнира</Text>
                 {isEditingTitle ? (
                   <Input
                     size="sm"
@@ -842,12 +844,11 @@ function App() {
 
           <Box
             mb={4}
-            borderWidth={1}
-            borderRadius="md"
             p={3}
+            className="panel"
             borderStyle={isImportDrag ? "dashed" : "solid"}
             borderColor={isImportDrag ? "blue.400" : "gray.200"}
-            background={isImportDrag ? "blue.50" : "white"}
+            background={isImportDrag ? "blue.50" : "transparent"}
             onDragOver={(e) => {
               e.preventDefault();
               setIsImportDrag(true);
@@ -861,7 +862,7 @@ function App() {
             }}
           >
             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-              <Text fontWeight="bold">Сохранения</Text>
+              <Text fontWeight="bold" className="panel-title">Сохранения</Text>
               <Text fontSize="xs" color="gray.500">
                 Перетащите файл сюда для импорта
               </Text>

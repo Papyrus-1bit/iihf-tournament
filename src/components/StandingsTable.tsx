@@ -16,7 +16,7 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
   const [view, setView] = useState<"overall" | "groups">("overall");
 
   return (
-    <Box>
+    <Box className="panel" p={3}>
       <Box mb={3} display="flex" alignItems="center" gap={2} flexWrap="wrap">
         <Text fontWeight="bold">Таблица</Text>
         <label>
@@ -47,9 +47,8 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
                 display="flex"
                 justifyContent="space-between"
                 py={1}
-                borderTopWidth={1}
                 style={highlightRow(t.teamId)}
-                _hover={{ background: "gray.50" }}
+                className="table-row"
               >
                 <Box flex={3} display="flex" alignItems="center" gap={2}>
                   <Flag code={t.flagCode} name={t.teamName} /> {t.teamName}
@@ -86,9 +85,8 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
                 display="flex"
                 justifyContent="space-between"
                 py={1}
-                borderTopWidth={1}
                 style={highlightRow(t.teamId)}
-                _hover={{ background: "gray.50" }}
+                className="table-row"
               >
                 <Box flex={3} display="flex" alignItems="center" gap={2}>
                   <Flag code={t.flagCode} name={t.teamName} /> {t.teamName}

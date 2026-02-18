@@ -148,13 +148,11 @@ const MatchCard: React.FC<Props> = ({
 
   return (
     <Box
-      borderWidth={1}
-      borderRadius="md"
       p={2}
       mb={2}
-      borderColor={isPlayerMatch ? "green.400" : "gray.200"}
-      background={isPlayerMatch ? "green.50" : "white"}
       opacity={isLocked ? 0.6 : 1}
+      className="match-card"
+      data-player={isPlayerMatch}
     >
       <Box display="flex" alignItems="center" gap={2} mb={1} whiteSpace="nowrap">
         {match.stage === "group" && match.groupName && (

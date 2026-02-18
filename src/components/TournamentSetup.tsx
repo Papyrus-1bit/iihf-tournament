@@ -61,7 +61,7 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate }) => {
   };
 
   return (
-    <Box mb={4} borderWidth={1} borderRadius="md" p={3} maxW="720px">
+    <Box mb={4} borderWidth={1} borderRadius="md" p={3} maxW="720px" className="panel">
       <Text fontWeight="bold" mb={3}>Параметры групп</Text>
       <Box display="flex" alignItems="center" gap={4} flexWrap="wrap">
         <Box flex="1" minW="220px">

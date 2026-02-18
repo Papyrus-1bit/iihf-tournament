@@ -79,7 +79,7 @@ const Calendar: React.FC<Props> = ({ groups, playoffMatches, onUpdateMatch, play
   };
 
   return (
-    <Box mb={4}>
+    <Box mb={4} className="calendar">
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
         <Heading size="sm">Календарь</Heading>
         <Box display="flex" gap={2}>
@@ -93,11 +93,9 @@ const Calendar: React.FC<Props> = ({ groups, playoffMatches, onUpdateMatch, play
       </Box>
       <Box
         ref={scrollRef}
-        display="flex"
-        gap={3}
-        overflowX="auto"
         pb={2}
         scrollSnapType="x mandatory"
+        className="calendar-strip"
       >
         {orderedDates.map((date) => {
           const matches = matchesByDate.get(date) ?? [];
@@ -118,11 +116,10 @@ const Calendar: React.FC<Props> = ({ groups, playoffMatches, onUpdateMatch, play
               minW="280px"
               flex="0 0 280px"
               p={3}
-              borderWidth={1}
-              borderRadius="md"
-              borderColor={isActiveDay ? "blue.400" : isUpcoming ? "gray.200" : "gray.100"}
-              background={isActiveDay ? "blue.50" : isUpcoming ? "gray.50" : "white"}
               scrollSnapAlign="start"
+              className="calendar-day"
+              data-active={isActiveDay}
+              data-upcoming={isUpcoming}
             >
               <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
                 <Heading size="xs">{getDisplayDate(date)}</Heading>

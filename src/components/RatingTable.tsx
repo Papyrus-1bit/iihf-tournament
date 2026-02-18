@@ -22,7 +22,7 @@ const RatingTable: FC<Props> = ({ ratings, baseRanks = {}, playerTeamIds = [] })
   }
 
   return (
-    <Box>
+    <Box className="panel" p={3}>
       <Box>
         <Box fontWeight="bold" display="flex" justifyContent="space-between" mb={2}>
           <Box flex={1}>#</Box>
@@ -43,9 +43,8 @@ const RatingTable: FC<Props> = ({ ratings, baseRanks = {}, playerTeamIds = [] })
               display="flex"
               justifyContent="space-between"
               py={1}
-              borderTopWidth={1}
               style={highlight}
-              _hover={{ background: "gray.50" }}
+              className="table-row"
             >
               <Box flex={1}>{currentRank}</Box>
               <Box flex={4} display="flex" alignItems="center" gap={2}>
