@@ -61,8 +61,8 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate }) => {
   };
 
   return (
-    <Box mb={4} borderWidth={1} borderRadius="md" p={3} maxW="720px">
-      <Text fontWeight="bold" mb={3}>Параметры групп</Text>
+    <Box mb={4} borderWidth={1} borderRadius="md" p={3} maxW="720px" className="ui-panel">
+      <Text fontWeight="bold" mb={3} className="swiss-kicker">Параметры групп</Text>
       <Box display="flex" alignItems="center" gap={4} flexWrap="wrap">
         <Box flex="1" minW="220px">
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
@@ -78,10 +78,10 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate }) => {
             colorScheme="blue"
           >
             <Slider.Control>
-              <Slider.Track>
-                <Slider.Range />
+              <Slider.Track className="ui-slider-track">
+                <Slider.Range className="ui-slider-range" />
               </Slider.Track>
-              <Slider.Thumb index={0} />
+              <Slider.Thumb index={0} className="ui-slider-thumb" />
             </Slider.Control>
           </Slider.Root>
         </Box>
@@ -99,10 +99,10 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate }) => {
             colorScheme="blue"
           >
             <Slider.Control>
-              <Slider.Track>
-                <Slider.Range />
+              <Slider.Track className="ui-slider-track">
+                <Slider.Range className="ui-slider-range" />
               </Slider.Track>
-              <Slider.Thumb index={0} />
+              <Slider.Thumb index={0} className="ui-slider-thumb" />
             </Slider.Control>
           </Slider.Root>
         </Box>

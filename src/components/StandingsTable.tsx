@@ -12,7 +12,7 @@ interface Props {
 
 const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
   const highlightRow = (teamId: string) =>
-    playerTeamIds.includes(teamId) ? { background: "green.50" } : undefined;
+    playerTeamIds.includes(teamId) ? { background: "rgba(80, 200, 120, 0.12)" } : undefined;
   const [view, setView] = useState<"overall" | "groups">("overall");
 
   return (
@@ -20,7 +20,11 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
       <Box mb={3} display="flex" alignItems="center" gap={2} flexWrap="wrap">
         <Text fontWeight="bold">Таблица</Text>
         <label>
-          <select value={view} onChange={(e) => setView(e.target.value as "overall" | "groups")}>
+          <select
+            value={view}
+            onChange={(e) => setView(e.target.value as "overall" | "groups")}
+            className="ui-select"
+          >
             <option value="overall">Общая</option>
             <option value="groups">По группам</option>
           </select>
@@ -49,7 +53,7 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
                 py={1}
                 borderTopWidth={1}
                 style={highlightRow(t.teamId)}
-                _hover={{ background: "gray.50" }}
+                className="table-row"
               >
                 <Box flex={3} display="flex" alignItems="center" gap={2}>
                   <Flag code={t.flagCode} name={t.teamName} /> {t.teamName}
@@ -88,7 +92,7 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
                 py={1}
                 borderTopWidth={1}
                 style={highlightRow(t.teamId)}
-                _hover={{ background: "gray.50" }}
+                className="table-row"
               >
                 <Box flex={3} display="flex" alignItems="center" gap={2}>
                   <Flag code={t.flagCode} name={t.teamName} /> {t.teamName}

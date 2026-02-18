@@ -126,11 +126,11 @@ const GroupEditor: FC<Props> = ({
       py={1}
       mb={0}
       cursor="grab"
-      background={isSelected ? "green.50" : "white"}
-      borderColor={isSelected ? "green.400" : "gray.200"}
       display="inline-flex"
       alignItems="center"
       gap={2}
+      className="team-pill"
+      data-selected={isSelected}
     >
       <Flag code={team.flagCode} name={team.name} /> {team.name}
       {ovrLabel && (
@@ -144,12 +144,12 @@ const GroupEditor: FC<Props> = ({
   return (
     <Box mb={4}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-        <Heading size="md">Распределение команд по группам</Heading>
+        <Heading size="md" className="swiss-headline">Распределение команд по группам</Heading>
         <Button size="sm" variant="outline" onClick={handleAutoDistribute}>
           Автораспределение
         </Button>
       </Box>
-      <Text fontSize="sm" color="gray.500" mb={3}>
+      <Text fontSize="sm" color="gray.500" mb={3} className="swiss-kicker">
         Автораспределение перезапишет текущие группы и сбалансирует их по силе.
       </Text>
 
@@ -164,11 +164,13 @@ const GroupEditor: FC<Props> = ({
             minH="160px"
             onDrop={handleDrop(group.id)}
             onDragOver={handleDragOver}
+            className="group-panel"
           >
             <Box mb={2}>
               <input
                 value={group.name}
                 onChange={(e) => handleGroupNameChange(gi, e.target.value)}
+                className="ui-input"
                 style={{ width: "100%" }}
               />
               <Text fontSize="sm" color="gray.500" mb={1}>
@@ -193,6 +195,7 @@ const GroupEditor: FC<Props> = ({
         minH="120px"
         onDrop={handleDrop("unassigned")}
         onDragOver={handleDragOver}
+        className="group-panel"
       >
         <Heading size="sm" mb={2}>Нераспределённые команды</Heading>
         {unassigned.length === 0 && (

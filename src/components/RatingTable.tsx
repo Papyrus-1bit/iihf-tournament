@@ -1,5 +1,6 @@
 import type { FC } from "react";
 import { Box, Text } from "@chakra-ui/react";
+import { FiTrendingDown, FiTrendingUp } from "react-icons/fi";
 import Flag from "./Flag";
 
 interface RatingRow {
@@ -34,9 +35,10 @@ const RatingTable: FC<Props> = ({ ratings, baseRanks = {}, playerTeamIds = [] })
           const currentRank = index + 1;
           const baseRank = baseRanks[team.id];
           const delta = baseRank ? baseRank - currentRank : 0;
-          const deltaText = delta === 0 ? "—" : `${delta > 0 ? "▲" : "▼"} ${Math.abs(delta)}`;
           const deltaColor = delta > 0 ? "green.600" : delta < 0 ? "red.600" : "gray.500";
-          const highlight = playerTeamIds.includes(team.id) ? { background: "green.50" } : undefined;
+          const highlight = playerTeamIds.includes(team.id)
+            ? { background: "rgba(80, 200, 120, 0.12)" }
+            : undefined;
           return (
             <Box
               key={team.id}
@@ -45,7 +47,7 @@ const RatingTable: FC<Props> = ({ ratings, baseRanks = {}, playerTeamIds = [] })
               py={1}
               borderTopWidth={1}
               style={highlight}
-              _hover={{ background: "gray.50" }}
+              className="table-row"
             >
               <Box flex={1}>{currentRank}</Box>
               <Box flex={4} display="flex" alignItems="center" gap={2}>
@@ -60,7 +62,13 @@ const RatingTable: FC<Props> = ({ ratings, baseRanks = {}, playerTeamIds = [] })
                   {team.rating.toFixed(0)}
                 </Text>{" "}
                 <Text as="span" fontSize="sm" color={deltaColor}>
-                  {deltaText}
+                  {delta === 0 ? (
+                    "—"
+                  ) : (
+                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      {delta > 0 ? <FiTrendingUp /> : <FiTrendingDown />} {Math.abs(delta)}
+                    </span>
+                  )}
                 </Text>
               </Box>
             </Box>

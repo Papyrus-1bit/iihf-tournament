@@ -7,6 +7,14 @@ import StandingsTable from "./components/StandingsTable";
 import RatingTable from "./components/RatingTable";
 import PlayoffBracket from "./components/PlayoffBracket";
 import { Tab as UiTab, Tabs as UiTabs, UiRoot } from "./ui";
+import {
+  FiDownload,
+  FiEdit2,
+  FiFolderOpen,
+  FiSave,
+  FiTrash2,
+  FiUpload,
+} from "react-icons/fi";
 import { Group, Match, MatchRound, Team } from "./types";
 import { fetchCountries } from "./api";
 import {
@@ -479,6 +487,9 @@ function App() {
   const groupMatches = groups.flatMap((group) => group.matches);
   const bracketSize = getBracketSize(groups);
   const initialRound = getRoundForSize(bracketSize);
+  const totalTeams = teams.length;
+  const unassignedCount = unassigned.length;
+  const groupCount = groups.length;
 
   const buildSeeding = (size: number) => {
     if (size === 0) return [];
@@ -773,7 +784,31 @@ function App() {
       {teamsError && <Text mb={4} color="red.500">{teamsError}</Text>}
       {activeTab === "tournament" && (
         <>
-          <Box mb={4} borderWidth={1} borderRadius="md" p={3}>
+          <Box className="swiss-hero" data-anchor="TOURNAMENT" mb={4}>
+            <Text className="swiss-kicker">Tournament Setup</Text>
+            <Text className="swiss-headline">
+              {tournamentName.trim() || "IIHF турнир"}
+            </Text>
+            <Box className="swiss-facts">
+              <Box className="swiss-fact">
+                <Text className="swiss-fact-value">{totalTeams}</Text>
+                <Text className="swiss-fact-label">Teams</Text>
+              </Box>
+              <Box className="swiss-fact">
+                <Text className="swiss-fact-value">{groupCount || "—"}</Text>
+                <Text className="swiss-fact-label">Groups</Text>
+              </Box>
+              <Box className="swiss-fact">
+                <Text className="swiss-fact-value">{unassignedCount}</Text>
+                <Text className="swiss-fact-label">Unassigned</Text>
+              </Box>
+              <Box className="swiss-fact">
+                <Text className="swiss-fact-value">{bracketSize >= 4 ? bracketSize : "—"}</Text>
+                <Text className="swiss-fact-label">Bracket</Text>
+              </Box>
+            </Box>
+          </Box>
+          <Box mb={4} borderWidth={1} borderRadius="md" p={3} className="ui-panel">
             <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
               <Box>
                 <Text fontWeight="bold" mb={1}>Данные турнира</Text>
@@ -808,7 +843,7 @@ function App() {
                   disabled={!isTournamentCreated}
                   aria-label="Сохранить"
                 >
-                  💾
+                  <FiSave />
                 </Button>
                 <Button
                   size="xs"
@@ -817,7 +852,7 @@ function App() {
                   disabled={!isTournamentCreated}
                   aria-label="Экспорт"
                 >
-                  ⬇
+                  <FiDownload />
                 </Button>
                 <Button
                   size="xs"
@@ -825,7 +860,7 @@ function App() {
                   onClick={() => fileInputRef.current?.click()}
                   aria-label="Импорт"
                 >
-                  ⬆
+                  <FiUpload />
                 </Button>
                 <input
                   ref={fileInputRef}
@@ -848,8 +883,9 @@ function App() {
             borderRadius="md"
             p={3}
             borderStyle={isImportDrag ? "dashed" : "solid"}
-            borderColor={isImportDrag ? "blue.400" : "gray.200"}
-            background={isImportDrag ? "blue.50" : "white"}
+            borderColor={isImportDrag ? "rgba(200, 16, 46, 0.6)" : "rgba(255, 255, 255, 0.12)"}
+            background={isImportDrag ? "rgba(200, 16, 46, 0.12)" : "transparent"}
+            className="ui-panel"
             onDragOver={(e) => {
               e.preventDefault();
               setIsImportDrag(true);
@@ -909,7 +945,7 @@ function App() {
                         onClick={() => handleLoadTournament(save)}
                         aria-label="Загрузить"
                       >
-                        ⏎
+                        <FiFolderOpen />
                       </Button>
                       <Button
                         size="xs"
@@ -917,7 +953,7 @@ function App() {
                         onClick={() => handleStartRenameSave(save)}
                         aria-label="Редактировать"
                       >
-                        ✎
+                        <FiEdit2 />
                       </Button>
                       <Button
                         size="xs"
@@ -925,7 +961,7 @@ function App() {
                         onClick={() => handleDeleteSave(save.id)}
                         aria-label="Удалить"
                       >
-                        ✕
+                        <FiTrash2 />
                       </Button>
                     </Box>
                   </>
@@ -963,6 +999,7 @@ function App() {
                         value={playoffSeeding}
                         onChange={(e) => setPlayoffSeeding(e.target.value as PlayoffSeeding)}
                         style={{ width: "260px" }}
+                        className="ui-select"
                       >
                         <option value="overall">Общий рейтинг групп</option>
                         <option value="byGroup">Топ по группам + лучшие</option>
@@ -977,6 +1014,7 @@ function App() {
                           setPlayoffBracketRule(e.target.value as PlayoffBracketRule)
                         }
                         style={{ width: "260px" }}
+                        className="ui-select"
                       >
                         <option value="seeded">Классическая (1-8, 2-7...)</option>
                         <option value="cross">Кросс-группы (A1-B4...)</option>
