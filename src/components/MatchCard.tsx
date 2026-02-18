@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
-import { Box, Button, HStack, Text } from "@chakra-ui/react";
+import { Box, Text } from "@chakra-ui/react";
 import { FiPlay } from "react-icons/fi";
 import { Match } from "../types";
 import { simulateMatchResult } from "../simulation";
 import Flag from "./Flag";
+import { IconButton } from "../ui";
 
 interface Props {
   match: Match;
@@ -12,6 +12,8 @@ interface Props {
   isLocked: boolean;
   playerTeamIds: string[];
   useShortNames?: boolean;
+  featured?: boolean;
+  compact?: boolean;
 }
 
 const MatchCard: React.FC<Props> = ({
@@ -20,9 +22,15 @@ const MatchCard: React.FC<Props> = ({
   isLocked,
   playerTeamIds,
   useShortNames = false,
+  featured = false,
+  compact = false,
 }) => {
-  const [homeScore, setHomeScore] = useState(match.homeScore ?? "");
-  const [awayScore, setAwayScore] = useState(match.awayScore ?? "");
+  const [homeScore, setHomeScore] = useState(
+    match.homeScore !== undefined ? String(match.homeScore) : "0"
+  );
+  const [awayScore, setAwayScore] = useState(
+    match.awayScore !== undefined ? String(match.awayScore) : "0"
+  );
   const [isOvertime, setIsOvertime] = useState(!!match.overtime);
   const [isShootout, setIsShootout] = useState(!!match.shootout);
 
@@ -41,8 +49,8 @@ const MatchCard: React.FC<Props> = ({
   };
 
   useEffect(() => {
-    setHomeScore(match.homeScore ?? "");
-    setAwayScore(match.awayScore ?? "");
+    setHomeScore(match.homeScore !== undefined ? String(match.homeScore) : "0");
+    setAwayScore(match.awayScore !== undefined ? String(match.awayScore) : "0");
     setIsOvertime(!!match.overtime);
     setIsShootout(!!match.shootout);
   }, [match.homeScore, match.awayScore, match.overtime, match.shootout]);
@@ -99,8 +107,8 @@ const MatchCard: React.FC<Props> = ({
       overtime: nextOvertime,
       shootout: nextShootout,
     });
-    setHomeScore(nextHome);
-    setAwayScore(nextAway);
+    setHomeScore(String(nextHome));
+    setAwayScore(String(nextAway));
     setIsOvertime(nextOvertime);
     setIsShootout(nextShootout);
   };
@@ -120,16 +128,6 @@ const MatchCard: React.FC<Props> = ({
   };
 
   const marker = getResultMarker();
-  const extraValue = isShootout ? "SO" : isOvertime ? "OT" : "REG";
-  const radioName = `extra-${match.id}`;
-
-  const scoreInputStyle: CSSProperties = {
-    width: "40px",
-    padding: "2px 6px",
-    border: "1px solid #CBD5E0",
-    borderRadius: "6px",
-    fontSize: "12px",
-  };
 
   const getShortName = (name: string) => {
     if (!useShortNames) return name;
@@ -144,126 +142,173 @@ const MatchCard: React.FC<Props> = ({
     return `${name.slice(0, 9)}...`;
   };
 
-  // cast HStack to any due to mismatching Chakra typings
-  const HStackAny = HStack as any;
+  if (compact) {
+    return (
+      <Box
+        borderWidth={1}
+        borderRadius="md"
+        p={2}
+        mb={2}
+        opacity={isLocked ? 0.6 : 1}
+        className="match-card"
+        data-player={isPlayerMatch}
+        data-compact="true"
+      >
+        <Box className="match-compact-row">
+          <Box className="match-compact-team">
+            <Flag code={match.home.flagCode} name={match.home.name} size={24} />
+            <span>{getShortName(match.home.name)}</span>
+          </Box>
+          <span className="match-compact-score">
+            {match.homeScore ?? 0}-{match.awayScore ?? 0}
+          </span>
+          <Box className="match-compact-team">
+            <span>{getShortName(match.away.name)}</span>
+            <Flag code={match.away.flagCode} name={match.away.name} size={24} />
+          </Box>
+          <IconButton
+            onClick={handleSimulate}
+            disabled={!simulateEnabled}
+            aria-label="Симулировать матч"
+          >
+            <FiPlay />
+          </IconButton>
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box
       borderWidth={1}
       borderRadius="md"
-      p={2}
-      mb={2}
+      p={3}
+      mb={3}
       opacity={isLocked ? 0.6 : 1}
       className="match-card"
       data-player={isPlayerMatch}
+      data-featured={featured}
     >
-      <Box display="flex" alignItems="center" gap={2} mb={1} whiteSpace="nowrap">
-        {match.stage === "group" && match.groupName && (
-          <Text fontSize="xs" color="gray.600">
-            {match.groupName}
-          </Text>
+      <Box className="match-card-header">
+        <span>
+          {match.stage === "group" && match.groupName
+            ? match.groupName
+            : match.stage === "playoff" && match.round
+            ? roundLabels[match.round] ?? match.round
+            : "Матч"}
+        </span>
+        {marker && (
+          <span
+            className="match-card-marker"
+            style={{
+              color: marker.endsWith("W")
+                ? "#22c55e"
+                : marker === "T"
+                ? "rgba(245,245,247,0.6)"
+                : "#ef4444",
+            }}
+          >
+            {marker}
+          </span>
         )}
-        {match.stage === "playoff" && match.round && (
-          <Text fontSize="xs" color="purple.600">
-            {roundLabels[match.round] ?? match.round}
-          </Text>
-        )}
-        <Box display="inline-flex" alignItems="center" gap={1}>
-          <Text as="span" color={playerTeamIds.includes(match.home.id) ? "green.700" : "inherit"}>
-            <Flag code={match.home.flagCode} name={match.home.name} /> {getShortName(match.home.name)}
-          </Text>
+      </Box>
+      <Box className="match-card-main">
+        <Box className="match-team">
+          <Flag code={match.home.flagCode} name={match.home.name} size={36} />
+          <Box>
+            <Text className="match-team-name">{getShortName(match.home.name)}</Text>
+            <Text className="match-team-meta">
+              {match.home.ovr ? `OVR ${match.home.ovr}` : "OVR —"}
+            </Text>
+          </Box>
         </Box>
-        <Text as="span">—</Text>
-        <Box display="inline-flex" alignItems="center" gap={1}>
-          <Text as="span" color={playerTeamIds.includes(match.away.id) ? "green.700" : "inherit"}>
-            <Flag code={match.away.flagCode} name={match.away.name} /> {getShortName(match.away.name)}
-          </Text>
+        <Box className="match-score">
+          <input
+            className="match-score-input"
+            value={homeScore}
+            onChange={(e) => {
+              const next = e.target.value;
+              setHomeScore(next);
+              tryUpdateScores(next, awayScore, isOvertime, isShootout);
+            }}
+            placeholder="—"
+            disabled={!manualEnabled}
+            inputMode="numeric"
+            onFocus={(e) => e.currentTarget.select()}
+          />
+          <span className="match-score-sep">VS</span>
+          <input
+            className="match-score-input"
+            value={awayScore}
+            onChange={(e) => {
+              const next = e.target.value;
+              setAwayScore(next);
+              tryUpdateScores(homeScore, next, isOvertime, isShootout);
+            }}
+            placeholder="—"
+            disabled={!manualEnabled}
+            inputMode="numeric"
+            onFocus={(e) => e.currentTarget.select()}
+          />
+        </Box>
+        <Box className="match-team right">
+          <Box>
+            <Text className="match-team-name">{getShortName(match.away.name)}</Text>
+            <Text className="match-team-meta">
+              {match.away.ovr ? `OVR ${match.away.ovr}` : "OVR —"}
+            </Text>
+          </Box>
+          <Flag code={match.away.flagCode} name={match.away.name} size={36} />
         </Box>
       </Box>
-      <HStackAny spacing={2}>
-        <input
-          style={scoreInputStyle}
-          value={homeScore}
-          onChange={(e) => {
-            const next = e.target.value;
-            setHomeScore(next);
-            tryUpdateScores(next, awayScore, isOvertime, isShootout);
-          }}
-          placeholder="Home"
-          disabled={!manualEnabled}
-        />
-        <Text>-</Text>
-        <input
-          style={scoreInputStyle}
-          value={awayScore}
-          onChange={(e) => {
-            const next = e.target.value;
-            setAwayScore(next);
-            tryUpdateScores(homeScore, next, isOvertime, isShootout);
-          }}
-          placeholder="Away"
-          disabled={!manualEnabled}
-        />
-        <label>
-          <input
-            type="radio"
-            name={radioName}
-            value="REG"
-            checked={extraValue === "REG"}
-            onChange={() => {
-              setIsOvertime(false);
-              setIsShootout(false);
-              tryUpdateScores(homeScore, awayScore, false, false);
-            }}
-            disabled={!manualEnabled}
-          />{" "}
-          60
-        </label>
-        <label>
-          <input
-            type="radio"
-            name={radioName}
-            value="OT"
-            checked={extraValue === "OT"}
-            onChange={() => {
-              setIsOvertime(true);
-              setIsShootout(false);
-              tryUpdateScores(homeScore, awayScore, true, false);
-            }}
-            disabled={!manualEnabled}
-          />{" "}
-          ОТ
-        </label>
-        <label>
-          <input
-            type="radio"
-            name={radioName}
-            value="SO"
-            checked={extraValue === "SO"}
-            onChange={() => {
-              setIsOvertime(false);
-              setIsShootout(true);
-              tryUpdateScores(homeScore, awayScore, false, true);
-            }}
-            disabled={!manualEnabled}
-          />{" "}
-          Б
-        </label>
-        {marker && (
-          <Text fontWeight="bold" color={marker.endsWith("W") ? "green.600" : marker === "T" ? "gray.500" : "red.600"}>
-            {marker}
-          </Text>
-        )}
-        <Button
-          colorScheme="blue"
-          size="sm"
-          onClick={handleSimulate}
-          disabled={!simulateEnabled}
-          aria-label="Симулировать матч"
-        >
-          <FiPlay />
-        </Button>
-      </HStackAny>
+      <Box className="match-card-controls">
+        <Box className="match-card-toggle">
+          <Text className="match-team-meta">СИМ</Text>
+          <IconButton
+            onClick={handleSimulate}
+            disabled={!simulateEnabled}
+            aria-label="Симулировать матч"
+          >
+            <FiPlay />
+          </IconButton>
+        </Box>
+        <Box className="match-card-toggle">
+          <label className="match-toggle">
+            <input
+              type="checkbox"
+              checked={isOvertime}
+              onChange={() => {
+                const next = !isOvertime;
+                setIsOvertime(next);
+                if (next) {
+                  setIsShootout(false);
+                }
+                tryUpdateScores(homeScore, awayScore, next, false);
+              }}
+              disabled={!manualEnabled}
+            />
+            <span className="match-toggle-track" />
+            <span className="match-toggle-text">ОТ</span>
+          </label>
+          <label className="match-toggle">
+            <input
+              type="checkbox"
+              checked={isShootout}
+              onChange={() => {
+                const next = !isShootout;
+                setIsShootout(next);
+                if (next) {
+                  setIsOvertime(false);
+                }
+                tryUpdateScores(homeScore, awayScore, false, next);
+              }}
+              disabled={!manualEnabled}
+            />
+            <span className="match-toggle-track" />
+            <span className="match-toggle-text">Б</span>
+          </label>
+        </Box>
+      </Box>
     </Box>
   );
 };

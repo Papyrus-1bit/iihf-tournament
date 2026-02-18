@@ -1,21 +1,28 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Button, Heading, Input, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Heading,
+  Input,
+  Text,
+} from "@chakra-ui/react";
 import TournamentSetup from "./components/TournamentSetup";
 import GroupEditor from "./components/GroupEditor";
 import Calendar from "./components/Calendar";
 import StandingsTable from "./components/StandingsTable";
 import RatingTable from "./components/RatingTable";
 import PlayoffBracket from "./components/PlayoffBracket";
-import { Tab as UiTab, Tabs as UiTabs, UiRoot } from "./ui";
+import { StatCard, UiRoot } from "./ui";
 import {
   FiDownload,
   FiEdit2,
-  FiFolderOpen,
+  FiFolder,
   FiSave,
   FiTrash2,
   FiUpload,
+  FiX,
 } from "react-icons/fi";
-import { Group, Match, MatchRound, Team } from "./types";
+import { Group, Match, MatchRound, PodiumCounts, Team } from "./types";
 import { fetchCountries } from "./api";
 import {
   applyMatchesToGroups,
@@ -27,6 +34,9 @@ import {
 import { calculateGroupStats, calculateOverallStats } from "./standings";
 
 const RATINGS_STORAGE_KEY = "iihfRatings";
+const PODIUM_STORAGE_KEY = "iihfPodium";
+const PODIUM_VERSION_KEY = "iihfPodiumVersion";
+const PODIUM_VERSION = "4";
 const SAVES_STORAGE_KEY = "iihfTournamentSaves";
 const DEFAULT_RATING = 1500;
 
@@ -46,6 +56,55 @@ interface TournamentSaveData {
   tournamentBaseRanks: Record<string, number>;
   ratingsCommitted: boolean;
 }
+
+const emptyPodium = (): PodiumCounts => ({
+  gold: 0,
+  silver: 0,
+  bronze: 0,
+  finals: 0,
+});
+
+const mergePodium = (
+  base: Record<string, PodiumCounts>,
+  add: Record<string, PodiumCounts>
+) => {
+  const next: Record<string, PodiumCounts> = {};
+  const keys = new Set([...Object.keys(base), ...Object.keys(add)]);
+  keys.forEach((id) => {
+    const a = base[id] ?? emptyPodium();
+    const b = add[id] ?? emptyPodium();
+    next[id] = {
+      gold: a.gold + b.gold,
+      silver: a.silver + b.silver,
+      bronze: a.bronze + b.bronze,
+      finals: a.finals + b.finals,
+    };
+  });
+  return next;
+};
+
+const resolvePodiumBase = (
+  fallback: Record<string, PodiumCounts>,
+  stored: Record<string, PodiumCounts>
+) => {
+  const next: Record<string, PodiumCounts> = {};
+  const keys = new Set([...Object.keys(fallback), ...Object.keys(stored)]);
+  keys.forEach((id) => {
+    const base = fallback[id] ?? emptyPodium();
+    const saved = stored[id];
+    if (!saved) {
+      next[id] = base;
+      return;
+    }
+    next[id] = {
+      gold: Math.max(saved.gold ?? 0, base.gold),
+      silver: Math.max(saved.silver ?? 0, base.silver),
+      bronze: Math.max(saved.bronze ?? 0, base.bronze),
+      finals: Math.max(saved.finals ?? 0, base.finals),
+    };
+  });
+  return next;
+};
 
 interface TournamentSave {
   id: string;
@@ -101,6 +160,7 @@ function App() {
   const [defaultRatings, setDefaultRatings] = useState<Record<string, number>>({});
   const [baseRatings, setBaseRatings] = useState<Record<string, number>>({});
   const [ratings, setRatings] = useState<Array<Team & { rating: number }>>([]);
+  const [podiumBase, setPodiumBase] = useState<Record<string, PodiumCounts>>({});
   const [tournamentBaseRanks, setTournamentBaseRanks] = useState<Record<string, number>>({});
   const [ratingsCommitted, setRatingsCommitted] = useState(false);
   const [tournamentName, setTournamentName] = useState("");
@@ -109,9 +169,8 @@ function App() {
   const [editingSaveName, setEditingSaveName] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isImportDrag, setIsImportDrag] = useState(false);
-  const [activeTab, setActiveTab] = useState<
-    "tournament" | "calendar" | "standings" | "playoff" | "rating"
-  >("tournament");
+  const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"tournament" | "rating">("rating");
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [teamsError, setTeamsError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -131,6 +190,21 @@ function App() {
           }
         }
 
+        const storedVersion = localStorage.getItem(PODIUM_VERSION_KEY);
+        if (storedVersion !== PODIUM_VERSION) {
+          localStorage.removeItem(PODIUM_STORAGE_KEY);
+          localStorage.setItem(PODIUM_VERSION_KEY, PODIUM_VERSION);
+        }
+        const podiumRaw = localStorage.getItem(PODIUM_STORAGE_KEY);
+        let storedPodiums: Record<string, PodiumCounts> = {};
+        if (podiumRaw) {
+          try {
+            storedPodiums = JSON.parse(podiumRaw) as Record<string, PodiumCounts>;
+          } catch {
+            storedPodiums = {};
+          }
+        }
+
         const entries = Object.entries(data).map(([code, info]) => ({
           code,
           name: info.name,
@@ -143,6 +217,21 @@ function App() {
           defaults[code] = info.rating_points;
         });
         setDefaultRatings(defaults);
+
+        const fallbackPodiums: Record<string, PodiumCounts> = {};
+        Object.entries(data).forEach(([code, info]) => {
+          const base = info.podiums ?? emptyPodium();
+          fallbackPodiums[code] = {
+            gold: base.gold ?? 0,
+            silver: base.silver ?? 0,
+            bronze: base.bronze ?? 0,
+            finals:
+              typeof base.finals === "number"
+                ? base.finals
+                : (base.gold ?? 0) + (base.silver ?? 0),
+          };
+        });
+        setPodiumBase(resolvePodiumBase(fallbackPodiums, storedPodiums));
 
         const nextBaseRatings: Record<string, number> = {};
         entries.forEach((e) => {
@@ -237,7 +326,8 @@ function App() {
     setIsTournamentCreated(true);
     setTournamentBaseRanks(buildRankMap(baseRatings));
     setRatingsCommitted(false);
-    setActiveTab("calendar");
+    setActiveTab("tournament");
+    setIsSetupOpen(false);
   };
 
   const handleEditTournament = () => {
@@ -284,7 +374,7 @@ function App() {
     setIsTournamentCreated(!!data.isTournamentCreated);
     setTournamentBaseRanks(data.tournamentBaseRanks ?? buildRankMap(baseRatings));
     setRatingsCommitted(!!data.ratingsCommitted);
-    setActiveTab(data.isTournamentCreated ? "calendar" : "tournament");
+    setActiveTab("tournament");
   };
 
   const handleSaveTournament = () => {
@@ -362,9 +452,15 @@ function App() {
     if (!file) return;
     try {
       const text = await file.text();
-      const parsed = JSON.parse(text) as { data?: TournamentSaveData };
-      const data = parsed.data ?? parsed;
-      applySaveData(data);
+      const parsed = JSON.parse(text) as unknown;
+      let data: Partial<TournamentSaveData> | null = null;
+      if (parsed && typeof parsed === "object" && "data" in parsed) {
+        const maybe = (parsed as { data?: TournamentSaveData }).data;
+        if (maybe) data = maybe;
+      } else if (parsed && typeof parsed === "object") {
+        data = parsed as Partial<TournamentSaveData>;
+      }
+      if (data) applySaveData(data);
     } catch {
       // ignore invalid file
     }
@@ -544,7 +640,9 @@ function App() {
     if (groupStats.some((stats) => stats.length < perGroup)) return null;
     const groupA = groupStats[0].slice(0, perGroup).map((stat) => stat.team);
     const groupB = groupStats[1].slice(0, perGroup).map((stat) => stat.team);
-    return groupA.map((team, index) => [team, groupB[perGroup - 1 - index]] as const);
+    return groupA.map(
+      (team, index) => [team, groupB[perGroup - 1 - index]] as [Team, Team]
+    );
   };
 
   const buildSeededPairs = (seeded: Team[]) => {
@@ -570,7 +668,7 @@ function App() {
     round: MatchRound,
     seeded: Team[],
     rule: PlayoffBracketRule = "seeded"
-  ) => {
+  ): Match[] => {
     let pairs: Array<[Team, Team]> = [];
     if (rule === "random") {
       pairs = buildSequentialPairs(shuffle(seeded));
@@ -581,7 +679,7 @@ function App() {
       pairs = buildSeededPairs(seeded);
     }
 
-    return pairs.map(([home, away], index) => ({
+    return pairs.map(([home, away], index): Match => ({
       id: `PO-${round}-${index + 1}`,
       home,
       away,
@@ -742,15 +840,79 @@ function App() {
     if (ratingsCommitted) return;
     if (ratings.length === 0) return;
     commitRatingsAsBase(ratings);
-    setRatingsCommitted(true);
-  }, [isTournamentCreated, tournamentComplete, ratingsCommitted, ratings]);
+    if (playoffRequired) {
+      const finalMatch = playoffMatches.find((match) => match.round === "F");
+      if (
+        finalMatch &&
+        finalMatch.homeScore !== undefined &&
+        finalMatch.awayScore !== undefined
+      ) {
+        const resolveWinner = (match: Match) =>
+          match.homeScore !== undefined && match.awayScore !== undefined
+            ? match.homeScore >= match.awayScore
+              ? match.home
+              : match.away
+            : null;
+        const resolveLoser = (match: Match) =>
+          match.homeScore !== undefined && match.awayScore !== undefined
+            ? match.homeScore >= match.awayScore
+              ? match.away
+              : match.home
+            : null;
 
-  const tabs = [
-    { id: "tournament", label: "Турнир", disabled: false },
-    { id: "calendar", label: "Расписание игр", disabled: !isTournamentCreated },
-    { id: "standings", label: "Таблица", disabled: !isTournamentCreated },
-    { id: "playoff", label: "Плей-офф", disabled: !isTournamentCreated || !playoffRequired },
-    { id: "rating", label: "Рейтинг команд", disabled: false },
+        const winner = resolveWinner(finalMatch);
+        const loser = resolveLoser(finalMatch);
+        const delta: Record<string, PodiumCounts> = {};
+        const bump = (teamId: string, changes: Partial<PodiumCounts>) => {
+          const current = delta[teamId] ?? emptyPodium();
+          delta[teamId] = {
+            gold: current.gold + (changes.gold ?? 0),
+            silver: current.silver + (changes.silver ?? 0),
+            bronze: current.bronze + (changes.bronze ?? 0),
+            finals: current.finals + (changes.finals ?? 0),
+          };
+        };
+
+        if (winner && loser) {
+          bump(winner.id, { gold: 1, finals: 1 });
+          bump(loser.id, { silver: 1, finals: 1 });
+        }
+
+        const thirdMatch = playoffMatches.find((match) => match.round === "3P");
+        if (
+          thirdMatch &&
+          thirdMatch.homeScore !== undefined &&
+          thirdMatch.awayScore !== undefined
+        ) {
+          const bronzeWinner = resolveWinner(thirdMatch);
+          if (bronzeWinner) {
+            bump(bronzeWinner.id, { bronze: 1 });
+          }
+        }
+
+        if (Object.keys(delta).length > 0) {
+          setPodiumBase((prev) => {
+            const next = mergePodium(prev, delta);
+            localStorage.setItem(PODIUM_STORAGE_KEY, JSON.stringify(next));
+            localStorage.setItem(PODIUM_VERSION_KEY, PODIUM_VERSION);
+            return next;
+          });
+        }
+      }
+    }
+    setRatingsCommitted(true);
+  }, [
+    isTournamentCreated,
+    tournamentComplete,
+    ratingsCommitted,
+    ratings,
+    playoffRequired,
+    playoffMatches,
+  ]);
+
+  const navItems = [
+    { id: "rating", label: "Рейтинг команд" },
+    { id: "tournament", label: "Турнир" },
   ] as const;
 
   const displayBaseRanks =
@@ -758,57 +920,49 @@ function App() {
   
   return (
     <UiRoot>
-      <Box p={4} maxW="1120px" mx="auto">
+      <Box p={4} maxW="1120px" mx="auto" className="ui-stack">
       <Heading
-        mb={4}
         cursor="pointer"
         onClick={() => setIsEditingTitle(true)}
       >
         {tournamentName.trim() || "IIHF турнир"}
       </Heading>
-      <Box mb={4}>
-        <UiTabs>
-          {tabs.map((tab) => (
-            <UiTab
-              key={tab.id}
-              active={activeTab === tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              disabled={tab.disabled}
-            >
-              {tab.label}
-            </UiTab>
-          ))}
-        </UiTabs>
+      <Box className="ui-nav">
+        {navItems.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            className="ui-nav-button"
+            data-active={activeTab === tab.id}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </Box>
-      {teamsLoading && <Text mb={4}>Загрузка команд...</Text>}
-      {teamsError && <Text mb={4} color="red.500">{teamsError}</Text>}
+      {teamsLoading && <Text>Загрузка команд...</Text>}
+      {teamsError && <Text color="red.500">{teamsError}</Text>}
       {activeTab === "tournament" && (
-        <>
-          <Box className="swiss-hero" data-anchor="TOURNAMENT" mb={4}>
-            <Text className="swiss-kicker">Tournament Setup</Text>
+        <Box className="ui-stack">
+          <Box className="swiss-hero" data-anchor="IIHF 2025">
             <Text className="swiss-headline">
               {tournamentName.trim() || "IIHF турнир"}
             </Text>
             <Box className="swiss-facts">
-              <Box className="swiss-fact">
-                <Text className="swiss-fact-value">{totalTeams}</Text>
-                <Text className="swiss-fact-label">Teams</Text>
-              </Box>
-              <Box className="swiss-fact">
-                <Text className="swiss-fact-value">{groupCount || "—"}</Text>
-                <Text className="swiss-fact-label">Groups</Text>
-              </Box>
-              <Box className="swiss-fact">
-                <Text className="swiss-fact-value">{unassignedCount}</Text>
-                <Text className="swiss-fact-label">Unassigned</Text>
-              </Box>
-              <Box className="swiss-fact">
-                <Text className="swiss-fact-value">{bracketSize >= 4 ? bracketSize : "—"}</Text>
-                <Text className="swiss-fact-label">Bracket</Text>
-              </Box>
+              <StatCard label="Команд" value={totalTeams} />
+              <StatCard label="Групп" value={groupCount || "—"} />
+              <StatCard label="Нераспр." value={unassignedCount} />
+              <StatCard label="Сетка" value={bracketSize >= 4 ? bracketSize : "—"} />
             </Box>
+            {!isTournamentCreated && (
+              <Box mt={3} display="flex" gap={2} flexWrap="wrap">
+                <Button size="sm" colorScheme="blue" onClick={() => setIsSetupOpen(true)}>
+                  Настройка турнира
+                </Button>
+              </Box>
+            )}
           </Box>
-          <Box mb={4} borderWidth={1} borderRadius="md" p={3} className="ui-panel">
+          <Box borderWidth={1} borderRadius="md" p={3} className="ui-panel">
             <Box display="flex" alignItems="center" justifyContent="space-between" gap={2}>
               <Box>
                 <Text fontWeight="bold" mb={1}>Данные турнира</Text>
@@ -878,7 +1032,6 @@ function App() {
           </Box>
 
           <Box
-            mb={4}
             borderWidth={1}
             borderRadius="md"
             p={3}
@@ -945,7 +1098,7 @@ function App() {
                         onClick={() => handleLoadTournament(save)}
                         aria-label="Загрузить"
                       >
-                        <FiFolderOpen />
+                        <FiFolder />
                       </Button>
                       <Button
                         size="xs"
@@ -969,131 +1122,156 @@ function App() {
               </Box>
             ))}
           </Box>
-
-          {!isTournamentCreated && (
-            <>
-              <TournamentSetup teams={teams} onCreate={handleCreateGroups} />
-              {groups.length > 0 && teams.length > 0 && (
-                <>
-                  <GroupEditor
-                    groups={groups}
-                    setGroups={setGroups}
-                    allTeams={teams}
-                    unassigned={unassigned}
-                    setUnassigned={setUnassigned}
-                    playerTeamIds={playerTeamIds}
-                    onTogglePlayerTeam={togglePlayerTeam}
-                    maxTeamsPerGroup={teamsPerGroupLimit}
-                  />
-                  <Box mb={4}>
-                    <Text fontSize="sm" color="gray.600">
-                      Клик по карточке команды — выделить “свою” команду.
-                    </Text>
-                    <Button size="xs" mt={2} variant="outline" onClick={() => setPlayerTeamIds([])}>
-                      Сбросить выбор
-                    </Button>
-                  </Box>
-                  <Box mb={4} display="flex" gap={3} flexWrap="wrap" alignItems="center">
-                    <label>
-                      <select
-                        value={playoffSeeding}
-                        onChange={(e) => setPlayoffSeeding(e.target.value as PlayoffSeeding)}
-                        style={{ width: "260px" }}
-                        className="ui-select"
-                      >
-                        <option value="overall">Общий рейтинг групп</option>
-                        <option value="byGroup">Топ по группам + лучшие</option>
-                        <option value="ratings">По историческому рейтингу</option>
-                        <option value="random">Случайная сетка</option>
-                      </select>
-                    </label>
-                    <label>
-                      <select
-                        value={playoffBracketRule}
-                        onChange={(e) =>
-                          setPlayoffBracketRule(e.target.value as PlayoffBracketRule)
-                        }
-                        style={{ width: "260px" }}
-                        className="ui-select"
-                      >
-                        <option value="seeded">Классическая (1-8, 2-7...)</option>
-                        <option value="cross">Кросс-группы (A1-B4...)</option>
-                        <option value="random">Случайные пары</option>
-                      </select>
-                    </label>
-                    <Text fontSize="sm" color="gray.500">
-                      Размер сетки: {bracketSize >= 4 ? bracketSize : "плей-офф не будет"}
-                    </Text>
-                  </Box>
-                  <Button mb={2} size="sm" colorScheme="blue" onClick={handleCreateTournament}>
-                    Создать турнир
-                  </Button>
-                </>
-              )}
-            </>
+          {!isTournamentCreated && groups.length > 0 && teams.length > 0 && (
+            <Text fontSize="sm" color="gray.600">
+              Распределение команд доступно в настройках турнира.
+            </Text>
           )}
           {isTournamentCreated && (
             <>
-              <Button mb={2} size="sm" variant="outline" onClick={handleEditTournament}>
-                Редактировать турнир
-              </Button>
-              <Button mb={4} size="sm" colorScheme="red" onClick={handleNewTournament}>
-                Новый турнир
-              </Button>
+              <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+                <Button size="sm" variant="outline" onClick={handleEditTournament}>
+                  Редактировать турнир
+                </Button>
+                <Button size="sm" colorScheme="red" onClick={handleNewTournament}>
+                  Новый турнир
+                </Button>
+              </Box>
               {tournamentComplete ? (
                 <Text color="green.600">Турнир завершён. Рейтинг обновлён.</Text>
               ) : (
-                <Text color="gray.600">Турнир создан. Перейдите в "Расписание игр", чтобы управлять матчами.</Text>
+                <Text color="gray.600">
+                  Турнир создан. Управляйте матчами ниже.
+                </Text>
               )}
+              <Box className="ui-panel">
+                <Calendar
+                  groups={groups}
+                  playoffMatches={playoffMatches}
+                  onUpdateMatch={updateMatchById}
+                  playerTeamIds={playerTeamIds}
+                  embedded
+                />
+              </Box>
+              <Box className="ui-panel">
+                <StandingsTable groups={groups} playerTeamIds={playerTeamIds} />
+              </Box>
+              <Box className="ui-panel">
+                {playoffRequired ? (
+                  <PlayoffBracket matches={playoffMatches} playerTeamIds={playerTeamIds} />
+                ) : (
+                  <Text color="gray.600">
+                    Плей-офф не проводится для текущего количества команд.
+                  </Text>
+                )}
+              </Box>
             </>
           )}
-        </>
-      )}
-
-      {activeTab === "calendar" && isTournamentCreated && (
-        <>
-          <Calendar
-            groups={groups}
-            playoffMatches={playoffMatches}
-            onUpdateMatch={updateMatchById}
-            playerTeamIds={playerTeamIds}
-          />
-        </>
-      )}
-
-      {activeTab === "calendar" && !isTournamentCreated && (
-        <Text color="gray.600">Создайте турнир сначала.</Text>
-      )}
-
-      {activeTab === "standings" && isTournamentCreated && (
-        <StandingsTable groups={groups} playerTeamIds={playerTeamIds} />
-      )}
-
-      {activeTab === "standings" && !isTournamentCreated && (
-        <Text color="gray.600">Создайте турнир сначала.</Text>
-      )}
-
-      {activeTab === "playoff" && isTournamentCreated && (
-        <>
-          {playoffRequired ? (
-            <PlayoffBracket matches={playoffMatches} playerTeamIds={playerTeamIds} />
-          ) : (
-            <Text color="gray.600">Плей-офф не проводится для текущего количества команд.</Text>
-          )}
-        </>
-      )}
-
-      {activeTab === "playoff" && !isTournamentCreated && (
-        <Text color="gray.600">Создайте турнир сначала.</Text>
+        </Box>
       )}
 
       {activeTab === "rating" && (
-        <>
-          <Button mb={4} size="sm" variant="outline" onClick={handleResetRatings}>
-            Сбросить рейтинг к дефолтному
+        <Box className="ui-stack">
+          <RatingTable
+            ratings={ratings}
+            baseRanks={displayBaseRanks}
+            playerTeamIds={playerTeamIds}
+            podium={podiumBase}
+          />
+          <Button size="sm" variant="outline" onClick={handleResetRatings}>
+            Сбросить рейтинг
           </Button>
-          <RatingTable ratings={ratings} baseRanks={displayBaseRanks} playerTeamIds={playerTeamIds} />
-        </>
+        </Box>
+      )}
+      {isSetupOpen && (
+        <Box
+          className="ui-modal-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsSetupOpen(false);
+          }}
+        >
+          <Box className="ui-modal" role="dialog" aria-modal="true">
+            <Box className="ui-modal-header">
+              <Text className="ui-modal-title">Настройка турнира</Text>
+              <button
+                type="button"
+                className="ui-icon-button"
+                onClick={() => setIsSetupOpen(false)}
+                aria-label="Закрыть"
+              >
+                <FiX />
+              </button>
+            </Box>
+            <Box className="ui-modal-body">
+              <Box className="ui-section">
+                <TournamentSetup teams={teams} onCreate={handleCreateGroups} embedded />
+                {groups.length > 0 && teams.length > 0 && (
+                  <>
+                    <Box className="ui-divider" />
+                    <Text fontWeight="bold" mb={2} className="swiss-kicker">
+                      Плей-офф
+                    </Text>
+                    <Box mb={3} display="flex" gap={3} flexWrap="wrap" alignItems="center">
+                      <label>
+                        <select
+                          value={playoffSeeding}
+                          onChange={(e) => setPlayoffSeeding(e.target.value as PlayoffSeeding)}
+                          style={{ width: "260px" }}
+                          className="ui-select"
+                        >
+                          <option value="overall">Общий рейтинг групп</option>
+                          <option value="byGroup">Топ по группам + лучшие</option>
+                          <option value="ratings">По историческому рейтингу</option>
+                          <option value="random">Случайная сетка</option>
+                        </select>
+                      </label>
+                      <label>
+                        <select
+                          value={playoffBracketRule}
+                          onChange={(e) =>
+                            setPlayoffBracketRule(e.target.value as PlayoffBracketRule)
+                          }
+                          style={{ width: "260px" }}
+                          className="ui-select"
+                        >
+                          <option value="seeded">Классическая (1-8, 2-7...)</option>
+                          <option value="cross">Кросс-группы (A1-B4...)</option>
+                          <option value="random">Случайные пары</option>
+                        </select>
+                      </label>
+                      <Text fontSize="sm" color="gray.500">
+                        Размер сетки: {bracketSize >= 4 ? bracketSize : "плей-офф не будет"}
+                      </Text>
+                    </Box>
+                    <Button size="sm" colorScheme="blue" onClick={handleCreateTournament}>
+                      Создать турнир
+                    </Button>
+                    <Box className="ui-divider" />
+                    <GroupEditor
+                      groups={groups}
+                      setGroups={setGroups}
+                      allTeams={teams}
+                      unassigned={unassigned}
+                      setUnassigned={setUnassigned}
+                      playerTeamIds={playerTeamIds}
+                      onTogglePlayerTeam={togglePlayerTeam}
+                      maxTeamsPerGroup={teamsPerGroupLimit}
+                      lineCards
+                    />
+                    <Box>
+                      <Text fontSize="sm" color="gray.600">
+                        Клик по карточке команды — выделить “свою” команду.
+                      </Text>
+                      <Button size="xs" mt={2} variant="outline" onClick={() => setPlayerTeamIds([])}>
+                        Сбросить выбор
+                      </Button>
+                    </Box>
+                  </>
+                )}
+              </Box>
+            </Box>
+          </Box>
+        </Box>
       )}
       </Box>
     </UiRoot>

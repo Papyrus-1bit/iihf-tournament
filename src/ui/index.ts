@@ -6,4 +6,6 @@ export { Input, Select, Textarea } from "./Input";
 export { default as Card } from "./Card";
 export { default as Tag } from "./Tag";
 export { default as SectionHeader } from "./SectionHeader";
+export { default as IconButton } from "./IconButton";
+export { default as StatCard } from "./StatCard";
 export { cx } from "./utils";

@@ -1,14 +1,15 @@
 import type { FC } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Slider, Text } from "@chakra-ui/react";
+import { Box, Button, Text } from "@chakra-ui/react";
 import { Team, Group } from "../types";
 
 interface Props {
   teams: Team[];
   onCreate: (groups: Group[], unassigned: Team[], teamsPerGroup: number) => void;
+  embedded?: boolean;
 }
 
-const TournamentSetup: FC<Props> = ({ teams, onCreate }) => {
+const TournamentSetup: FC<Props> = ({ teams, onCreate, embedded = false }) => {
   const [numGroups, setNumGroups] = useState(2);
   const [teamsPerGroup, setTeamsPerGroup] = useState(4);
 
@@ -27,9 +28,9 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate }) => {
     if (teams.length === 0 || numGroups <= 0) return;
     const newGroups: Group[] = [];
     for (let i = 0; i < numGroups; i += 1) {
-      newGroups.push({
+        newGroups.push({
         id: `group-${i + 1}`,
-        name: `Group ${String.fromCharCode(65 + i)}`,
+        name: `Группа ${String.fromCharCode(65 + i)}`,
         teams: [],
         matches: [],
       });
@@ -60,51 +61,50 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate }) => {
     onCreate(newGroups, unassigned, teamsPerGroup);
   };
 
-  return (
-    <Box mb={4} borderWidth={1} borderRadius="md" p={3} maxW="720px" className="ui-panel">
-      <Text fontWeight="bold" mb={3} className="swiss-kicker">Параметры групп</Text>
+  const content = (
+    <>
       <Box display="flex" alignItems="center" gap={4} flexWrap="wrap">
         <Box flex="1" minW="220px">
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
             <Text fontSize="sm" color="gray.500">Количество групп</Text>
             <Text fontSize="sm" fontWeight="bold">{numGroups}</Text>
           </Box>
-          <Slider.Root
+          <input
+            type="number"
             min={1}
             max={8}
             step={1}
-            value={[numGroups]}
-            onValueChange={(details) => setNumGroups(details.value[0] ?? 1)}
-            colorScheme="blue"
-          >
-            <Slider.Control>
-              <Slider.Track className="ui-slider-track">
-                <Slider.Range className="ui-slider-range" />
-              </Slider.Track>
-              <Slider.Thumb index={0} className="ui-slider-thumb" />
-            </Slider.Control>
-          </Slider.Root>
+            value={numGroups}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              if (!Number.isFinite(next)) return;
+              setNumGroups(Math.min(8, Math.max(1, Math.round(next))));
+            }}
+            className="ui-input"
+            style={{ width: "100%" }}
+          />
         </Box>
         <Box flex="1" minW="220px">
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
             <Text fontSize="sm" color="gray.500">Команд в группе</Text>
             <Text fontSize="sm" fontWeight="bold">{teamsPerGroup}</Text>
           </Box>
-          <Slider.Root
+          <input
+            type="number"
             min={2}
             max={maxTeamsPerGroup}
             step={1}
-            value={[teamsPerGroup]}
-            onValueChange={(details) => setTeamsPerGroup(details.value[0] ?? 2)}
-            colorScheme="blue"
-          >
-            <Slider.Control>
-              <Slider.Track className="ui-slider-track">
-                <Slider.Range className="ui-slider-range" />
-              </Slider.Track>
-              <Slider.Thumb index={0} className="ui-slider-thumb" />
-            </Slider.Control>
-          </Slider.Root>
+            value={teamsPerGroup}
+            onChange={(e) => {
+              const next = Number(e.target.value);
+              if (!Number.isFinite(next)) return;
+              setTeamsPerGroup(
+                Math.min(maxTeamsPerGroup, Math.max(2, Math.round(next)))
+              );
+            }}
+            className="ui-input"
+            style={{ width: "100%" }}
+          />
         </Box>
         <Button
           size="sm"
@@ -115,9 +115,16 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate }) => {
           Создать группы
         </Button>
       </Box>
-      <Text fontSize="xs" color="gray.500" mt={2}>
-        После выбора параметров нажмите кнопку, чтобы создать группы.
-      </Text>
+    </>
+  );
+
+  if (embedded) {
+    return <Box>{content}</Box>;
+  }
+
+  return (
+    <Box mb={4} borderWidth={1} borderRadius="md" p={3} maxW="720px" className="ui-panel">
+      {content}
     </Box>
   );
 };

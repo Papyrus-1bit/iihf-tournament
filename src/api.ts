@@ -1,8 +1,11 @@
+import type { PodiumCounts } from "./types";
+
 export interface CountryResponse {
   [name: string]: {
     name: string;
     rating_points: number;
     ovr?: number;
+    podiums?: PodiumCounts;
   };
 }
 

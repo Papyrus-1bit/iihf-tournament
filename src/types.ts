@@ -7,6 +7,13 @@ export interface Team {
   ovr?: number;
 }
 
+export interface PodiumCounts {
+  gold: number;
+  silver: number;
+  bronze: number;
+  finals: number;
+}
+
 export type MatchStage = "group" | "playoff";
 export type MatchRound = "GROUP" | "R16" | "QF" | "SF" | "F" | "3P";
 

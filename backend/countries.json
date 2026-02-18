@@ -2,116 +2,254 @@
   "RU": {
     "name": "Россия",
     "rating_points": 4030,
-    "ovr": 90
+    "ovr": 90,
+    "podiums": {
+      "gold": 27,
+      "silver": 10,
+      "bronze": 10,
+      "finals": 37
+    }
   },
   "US": {
     "name": "США",
     "rating_points": 3985,
-    "ovr": 89
+    "ovr": 89,
+    "podiums": {
+      "gold": 3,
+      "silver": 9,
+      "bronze": 9,
+      "finals": 12
+    }
   },
   "CH": {
     "name": "Швейцария",
     "rating_points": 3975,
-    "ovr": 89
+    "ovr": 89,
+    "podiums": {
+      "gold": 0,
+      "silver": 5,
+      "bronze": 8,
+      "finals": 5
+    }
   },
   "CA": {
     "name": "Канада",
     "rating_points": 3935,
-    "ovr": 88
+    "ovr": 88,
+    "podiums": {
+      "gold": 28,
+      "silver": 16,
+      "bronze": 9,
+      "finals": 44
+    }
   },
   "SE": {
     "name": "Швеция",
     "rating_points": 3915,
-    "ovr": 88
+    "ovr": 88,
+    "podiums": {
+      "gold": 11,
+      "silver": 19,
+      "bronze": 19,
+      "finals": 30
+    }
   },
   "CZ": {
     "name": "Чехия",
     "rating_points": 3860,
-    "ovr": 87
+    "ovr": 87,
+    "podiums": {
+      "gold": 13,
+      "silver": 13,
+      "bronze": 22,
+      "finals": 26
+    }
   },
   "FI": {
     "name": "Финляндия",
     "rating_points": 3780,
-    "ovr": 86
+    "ovr": 86,
+    "podiums": {
+      "gold": 4,
+      "silver": 9,
+      "bronze": 3,
+      "finals": 13
+    }
   },
   "DE": {
     "name": "Германия",
     "rating_points": 3710,
-    "ovr": 85
+    "ovr": 85,
+    "podiums": {
+      "gold": 0,
+      "silver": 3,
+      "bronze": 2,
+      "finals": 3
+    }
   },
   "DK": {
     "name": "Дания",
     "rating_points": 3625,
-    "ovr": 83
+    "ovr": 83,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "SK": {
     "name": "Словакия",
     "rating_points": 3595,
-    "ovr": 83
+    "ovr": 83,
+    "podiums": {
+      "gold": 1,
+      "silver": 2,
+      "bronze": 1,
+      "finals": 3
+    }
   },
   "LV": {
     "name": "Латвия",
     "rating_points": 3585,
-    "ovr": 83
+    "ovr": 83,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 1,
+      "finals": 0
+    }
   },
   "AT": {
     "name": "Австрия",
     "rating_points": 3465,
-    "ovr": 81
+    "ovr": 81,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 2,
+      "finals": 0
+    }
   },
   "NO": {
     "name": "Норвегия",
     "rating_points": 3370,
-    "ovr": 79
+    "ovr": 79,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "KZ": {
     "name": "Казахстан",
     "rating_points": 3265,
-    "ovr": 77
+    "ovr": 77,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "FR": {
     "name": "Франция",
     "rating_points": 3255,
-    "ovr": 77
+    "ovr": 77,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "BY": {
     "name": "Беларусь",
     "rating_points": 3205,
-    "ovr": 76
+    "ovr": 76,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "SI": {
     "name": "Словения",
     "rating_points": 3180,
-    "ovr": 76
+    "ovr": 76,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "HU": {
     "name": "Венгрия",
     "rating_points": 3170,
-    "ovr": 76
+    "ovr": 76,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "GB": {
     "name": "Великобритания",
     "rating_points": 3100,
-    "ovr": 75
+    "ovr": 75,
+    "podiums": {
+      "gold": 1,
+      "silver": 2,
+      "bronze": 2,
+      "finals": 3
+    }
   },
   "IT": {
     "name": "Италия",
     "rating_points": 3025,
-    "ovr": 73
+    "ovr": 73,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "PL": {
     "name": "Польша",
     "rating_points": 2990,
-    "ovr": 73
+    "ovr": 73,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "JP": {
     "name": "Япония",
     "rating_points": 2860,
-    "ovr": 71
+    "ovr": 71,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   },
   "UA": {
     "name": "Украина",
     "rating_points": 2820,
-    "ovr": 70
+    "ovr": 70,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   }
 }

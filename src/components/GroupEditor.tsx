@@ -12,6 +12,7 @@ interface Props {
   playerTeamIds: string[];
   onTogglePlayerTeam: (teamId: string) => void;
   maxTeamsPerGroup?: number;
+  lineCards?: boolean;
 }
 
 const GroupEditor: FC<Props> = ({
@@ -23,6 +24,7 @@ const GroupEditor: FC<Props> = ({
   playerTeamIds,
   onTogglePlayerTeam,
   maxTeamsPerGroup,
+  lineCards = false,
 }) => {
   const getStrength = (team: Team) => {
     if (team.ratingPoints) return team.ratingPoints;
@@ -113,30 +115,28 @@ const GroupEditor: FC<Props> = ({
 
   const renderTeam = (team: Team, fromId: string) => {
     const isSelected = playerTeamIds.includes(team.id);
-    const ovrLabel = team.ovr ? `OVR ${team.ovr}` : null;
+    const ovrLabel = team.ovr ? `OVR ${team.ovr}` : "OVR —";
+    const cardClass = lineCards ? "team-card team-card--line" : "team-card";
     return (
     <Box
       key={team.id}
       draggable
       onDragStart={handleDragStart(team.id, fromId)}
       onClick={() => onTogglePlayerTeam(team.id)}
-      borderWidth={1}
-      borderRadius="md"
-      px={2}
-      py={1}
       mb={0}
       cursor="grab"
       display="inline-flex"
       alignItems="center"
       gap={2}
-      className="team-pill"
+      className={cardClass}
       data-selected={isSelected}
     >
-      <Flag code={team.flagCode} name={team.name} /> {team.name}
-      {ovrLabel && (
-        <Text fontSize="xs" color="gray.500">{ovrLabel}</Text>
-      )}
-      {isSelected && <Text fontSize="xs" color="green.700">●</Text>}
+      <Flag code={team.flagCode} name={team.name} size={28} />
+      <Box>
+        <Text className="team-card__name">{team.name}</Text>
+        <Text className="team-card__meta">{ovrLabel}</Text>
+      </Box>
+      {isSelected && <span className="team-card__dot" />}
     </Box>
     );
   };
@@ -149,9 +149,6 @@ const GroupEditor: FC<Props> = ({
           Автораспределение
         </Button>
       </Box>
-      <Text fontSize="sm" color="gray.500" mb={3} className="swiss-kicker">
-        Автораспределение перезапишет текущие группы и сбалансирует их по силе.
-      </Text>
 
       <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(220px, 1fr))" gap={3}>
         {groups.map((group, gi) => (
@@ -180,7 +177,13 @@ const GroupEditor: FC<Props> = ({
             {group.teams.length === 0 && (
               <Text fontSize="sm" color="gray.500">Перетащите команды в эту группу</Text>
             )}
-            <Box display="flex" flexWrap="wrap" gap={2}>
+            <Box
+              display="flex"
+              flexWrap={lineCards ? "nowrap" : "wrap"}
+              flexDirection={lineCards ? "column" : "row"}
+              gap={2}
+              className={lineCards ? "team-list team-list--line" : "team-list"}
+            >
               {group.teams.map((team) => renderTeam(team, group.id))}
             </Box>
           </Box>
@@ -201,7 +204,13 @@ const GroupEditor: FC<Props> = ({
         {unassigned.length === 0 && (
           <Text fontSize="sm" color="gray.500">Перетащите команды сюда, чтобы удалить их из групп.</Text>
         )}
-        <Box display="flex" flexWrap="wrap" gap={2}>
+        <Box
+          display="flex"
+          flexWrap={lineCards ? "nowrap" : "wrap"}
+          flexDirection={lineCards ? "column" : "row"}
+          gap={2}
+          className={lineCards ? "team-list team-list--line" : "team-list"}
+        >
           {unassigned.map((team) => renderTeam(team, "unassigned"))}
         </Box>
       </Box>

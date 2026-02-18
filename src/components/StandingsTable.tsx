@@ -51,7 +51,6 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
                 display="flex"
                 justifyContent="space-between"
                 py={1}
-                borderTopWidth={1}
                 style={highlightRow(t.teamId)}
                 className="table-row"
               >
@@ -90,7 +89,6 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
                 display="flex"
                 justifyContent="space-between"
                 py={1}
-                borderTopWidth={1}
                 style={highlightRow(t.teamId)}
                 className="table-row"
               >
