@@ -357,12 +357,6 @@ function App() {
     setIsEditingTitle(false);
   };
 
-  const handleEditTournament = () => {
-    setGroups((prev) => prev.map((group) => ({ ...group, matches: [] })));
-    setPlayoffMatches([]);
-    setIsTournamentCreated(false);
-    setRatingsCommitted(false);
-  };
 
   const buildSaveData = (): TournamentSaveData => ({
     tournamentName,
@@ -518,18 +512,6 @@ function App() {
     applyRatingsToTeams(nextBase);
   };
 
-  const handleNewTournament = () => {
-    if (ratings.length > 0) {
-      commitRatingsAsBase(ratings);
-    } else {
-      setUnassigned(teams);
-    }
-    setGroups([]);
-    setPlayoffMatches([]);
-    setIsTournamentCreated(false);
-    setRatingsCommitted(false);
-    setPlayerTeamIds([]);
-  };
 
   const handleResetRatings = () => {
     setBaseRatings(defaultRatings);
@@ -614,8 +596,14 @@ function App() {
   );
   const bracketSize = useMemo(() => getBracketSize(groups), [groups]);
   const initialRound = useMemo(() => getRoundForSize(bracketSize), [bracketSize]);
-  const totalTeams = teams.length;
-  const unassignedCount = unassigned.length;
+  const participantTeams = useMemo(
+    () =>
+      Array.from(
+        new Map(groups.flatMap((group) => group.teams).map((team) => [team.id, team])).values()
+      ),
+    [groups]
+  );
+  const participantCount = participantTeams.length;
   const groupCount = groups.length;
   const teamSummary = useMemo(() => {
     const fallbackTeam =
@@ -808,13 +796,6 @@ function App() {
     [groupMatches]
   );
 
-  const participantTeams = useMemo(
-    () =>
-      Array.from(
-        new Map(groups.flatMap((group) => group.teams).map((team) => [team.id, team])).values()
-      ),
-    [groups]
-  );
   const eliminatedTeamIds = useMemo(() => {
     const eliminated = new Set<string>();
     if (!isTournamentCreated) return eliminated;
@@ -884,50 +865,100 @@ function App() {
       return matches.every((match) => match.homeScore !== undefined && match.awayScore !== undefined);
     };
 
+    const samePairs = (a: Match[], b: Match[]) => {
+      if (a.length !== b.length) return false;
+      return a.every(
+        (match, index) =>
+          match.home.id === b[index].home.id && match.away.id === b[index].away.id
+      );
+    };
+
+    const attachDates = (nextMatches: Match[], existing: Match[]) => {
+      if (existing.length === nextMatches.length && existing.every((m) => m.date)) {
+        return nextMatches.map((match, index) => ({
+          ...match,
+          date: existing[index]?.date ?? match.date,
+        }));
+      }
+      return nextMatches;
+    };
+
     const lastDay = getLastScheduledDay([...groupMatches, ...playoffMatches]);
     const nextStartDate =
       lastDay !== null ? new Date((lastDay + 1) * 24 * 60 * 60 * 1000) : getTournamentStartDate();
 
-    if (roundMatches("R16").length > 0 && isRoundComplete("R16") && roundMatches("QF").length === 0) {
+    if (roundMatches("R16").length > 0 && isRoundComplete("R16")) {
       const nextRoundMatches = buildNextRoundFromWinners("QF", roundMatches("R16"));
-      const scheduled = assignMatchDates(nextRoundMatches, nextStartDate, [
-        ...groupMatches,
-        ...playoffMatches,
-      ]);
-      setPlayoffMatches((prev) => [...prev, ...scheduled]);
-      return;
-    }
-
-    if (roundMatches("QF").length > 0 && isRoundComplete("QF") && roundMatches("SF").length === 0) {
-      const nextRoundMatches = buildNextRoundFromWinners("SF", roundMatches("QF"));
-      const scheduled = assignMatchDates(nextRoundMatches, nextStartDate, [
-        ...groupMatches,
-        ...playoffMatches,
-      ]);
-      setPlayoffMatches((prev) => [...prev, ...scheduled]);
-      return;
-    }
-
-    if (roundMatches("SF").length > 0 && isRoundComplete("SF")) {
-      const hasFinal = roundMatches("F").length > 0;
-      const hasThird = roundMatches("3P").length > 0;
-      if (!hasFinal) {
-        const finalMatches = buildNextRoundFromWinners("F", roundMatches("SF"));
-        const scheduledFinal = assignMatchDates(finalMatches, nextStartDate, [
+      const existing = roundMatches("QF");
+      if (existing.length === 0) {
+        const scheduled = assignMatchDates(nextRoundMatches, nextStartDate, [
           ...groupMatches,
           ...playoffMatches,
         ]);
-        setPlayoffMatches((prev) => [...prev, ...scheduledFinal]);
+        setPlayoffMatches((prev) => [...prev, ...scheduled]);
+        return;
       }
-      if (!hasThird) {
-        const thirdPlace = buildThirdPlaceMatch(roundMatches("SF"));
-        if (thirdPlace.length > 0) {
-          const scheduledThird = assignMatchDates(thirdPlace, nextStartDate, [
-            ...groupMatches,
-            ...playoffMatches,
-          ]);
-          setPlayoffMatches((prev) => [...prev, ...scheduledThird]);
-        }
+      if (!samePairs(nextRoundMatches, existing)) {
+        const nextWithDates = attachDates(nextRoundMatches, existing);
+        setPlayoffMatches((prev) => [
+          ...prev.filter(
+            (match) => !["QF", "SF", "F", "3P"].includes(match.round ?? "")
+          ),
+          ...nextWithDates,
+        ]);
+        return;
+      }
+    }
+
+    if (roundMatches("QF").length > 0 && isRoundComplete("QF")) {
+      const nextRoundMatches = buildNextRoundFromWinners("SF", roundMatches("QF"));
+      const existing = roundMatches("SF");
+      if (existing.length === 0) {
+        const scheduled = assignMatchDates(nextRoundMatches, nextStartDate, [
+          ...groupMatches,
+          ...playoffMatches,
+        ]);
+        setPlayoffMatches((prev) => [...prev, ...scheduled]);
+        return;
+      }
+      if (!samePairs(nextRoundMatches, existing)) {
+        const nextWithDates = attachDates(nextRoundMatches, existing);
+        setPlayoffMatches((prev) => [
+          ...prev.filter((match) => !["SF", "F", "3P"].includes(match.round ?? "")),
+          ...nextWithDates,
+        ]);
+        return;
+      }
+    }
+
+    if (roundMatches("SF").length > 0 && isRoundComplete("SF")) {
+      const finalMatches = buildNextRoundFromWinners("F", roundMatches("SF"));
+      const thirdPlace = buildThirdPlaceMatch(roundMatches("SF"));
+      const existingFinal = roundMatches("F");
+      const existingThird = roundMatches("3P");
+      const finalMismatch =
+        (existingFinal.length === 0 && finalMatches.length > 0) ||
+        (existingFinal.length > 0 && !samePairs(finalMatches, existingFinal));
+      const thirdMismatch =
+        (existingThird.length === 0 && thirdPlace.length > 0) ||
+        (existingThird.length > 0 && !samePairs(thirdPlace, existingThird));
+
+      if (finalMismatch || thirdMismatch) {
+        const nextFinal = attachDates(finalMatches, existingFinal);
+        const nextThird = attachDates(thirdPlace, existingThird);
+        const scheduledFinal =
+          nextFinal.length > 0
+            ? assignMatchDates(nextFinal, nextStartDate, [...groupMatches, ...playoffMatches])
+            : [];
+        const scheduledThird =
+          nextThird.length > 0
+            ? assignMatchDates(nextThird, nextStartDate, [...groupMatches, ...playoffMatches])
+            : [];
+        setPlayoffMatches((prev) => [
+          ...prev.filter((match) => !["F", "3P"].includes(match.round ?? "")),
+          ...scheduledFinal,
+          ...scheduledThird,
+        ]);
       }
     }
   }, [isTournamentCreated, playoffMatches, groupMatches]);
@@ -1056,7 +1087,7 @@ function App() {
       {teamsError && <Text color="red.500">{teamsError}</Text>}
       <Box className="ui-stack">
         <Box className="hero-bar" data-testid="tournament-hero">
-          <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" gap={3} flexWrap="wrap">
             <Box display="flex" flexDirection="column" gap={2}>
               <img
                 src="/iihf-logo.svg"
@@ -1068,58 +1099,58 @@ function App() {
                 <Text className="ui-subtitle">{tournamentName.trim()}</Text>
               )}
             </Box>
-            <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
-              <IconButton
-                onClick={() => setIsSetupOpen(true)}
-                title="Новый турнир"
-                aria-label="Новый турнир"
-              >
-                <FiPlusSquare />
-              </IconButton>
+            <Box display="flex" alignItems="center" gap={2} flexWrap="wrap" className="hero-inline">
               {isTournamentCreated && (
                 <>
-                  <IconButton
-                    onClick={handleSaveTournament}
-                    title="Сохранить"
-                    aria-label="Сохранить"
-                  >
-                    <FiSave />
-                  </IconButton>
-                  <IconButton
-                    onClick={handleExportSave}
-                    title="Экспорт"
-                    aria-label="Экспорт"
-                  >
-                    <FiDownload />
-                  </IconButton>
+                  <Box className="hero-facts-inline">
+                    <StatCard label="Команд" value={participantCount} />
+                    <StatCard label="Групп" value={groupCount || "—"} />
+                  </Box>
+                  {participantTeams.length > 0 && (
+                    <Box className="participant-strip participant-strip--inline">
+                      {participantTeams.map((team) => (
+                        <span
+                          key={team.id}
+                          className="participant-flag"
+                          data-eliminated={eliminatedTeamIds.has(team.id)}
+                        >
+                          <Flag code={team.flagCode} name={team.name} size={22} />
+                        </span>
+                      ))}
+                    </Box>
+                  )}
                 </>
               )}
+              <Box display="flex" gap={1} alignItems="center">
+                <IconButton
+                  onClick={() => setIsSetupOpen(true)}
+                  title="Новый турнир"
+                  aria-label="Новый турнир"
+                >
+                  <FiPlusSquare />
+                </IconButton>
+                {isTournamentCreated && (
+                  <>
+                    <IconButton
+                      onClick={handleSaveTournament}
+                      title="Сохранить"
+                      aria-label="Сохранить"
+                    >
+                      <FiSave />
+                    </IconButton>
+                    <IconButton
+                      onClick={handleExportSave}
+                      title="Экспорт"
+                      aria-label="Экспорт"
+                    >
+                      <FiDownload />
+                    </IconButton>
+                  </>
+                )}
+              </Box>
             </Box>
           </Box>
         </Box>
-        {isTournamentCreated && (
-          <Box className="hero-stats">
-            <Box className="swiss-facts">
-              <StatCard label="Команд" value={totalTeams} />
-              <StatCard label="Групп" value={groupCount || "—"} />
-              <StatCard label="Нераспр." value={unassignedCount} />
-              <StatCard label="Сетка" value={bracketSize >= 4 ? bracketSize : "—"} />
-            </Box>
-            {participantTeams.length > 0 && (
-              <Box className="participant-strip">
-                {participantTeams.map((team) => (
-                  <span
-                    key={team.id}
-                    className="participant-flag"
-                    data-eliminated={eliminatedTeamIds.has(team.id)}
-                  >
-                    <Flag code={team.flagCode} name={team.name} size={26} />
-                  </span>
-                ))}
-              </Box>
-            )}
-          </Box>
-        )}
         {!isTournamentCreated && groups.length > 0 && teams.length > 0 && (
           <Text fontSize="sm" color="gray.600">
             Распределение команд доступно в настройках турнира.
@@ -1127,14 +1158,6 @@ function App() {
         )}
         {isTournamentCreated && (
           <>
-            <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-              <Button size="sm" variant="outline" onClick={handleEditTournament}>
-                Редактировать турнир
-              </Button>
-              <Button size="sm" colorScheme="red" onClick={handleNewTournament}>
-                Новый турнир
-              </Button>
-            </Box>
             {tournamentComplete ? (
               <Text color="green.600">Турнир завершён. Рейтинг обновлён.</Text>
             ) : (
@@ -1156,7 +1179,11 @@ function App() {
             </Box>
             <Box className="ui-panel">
               {playoffRequired ? (
-                <PlayoffBracket matches={playoffMatches} playerTeamIds={playerTeamIds} />
+                <PlayoffBracket
+                  matches={playoffMatches}
+                  playerTeamIds={playerTeamIds}
+                  eliminatedTeamIds={Array.from(eliminatedTeamIds)}
+                />
               ) : (
                 <Text color="gray.600">
                   Плей-офф не проводится для текущего количества команд.
@@ -1176,7 +1203,7 @@ function App() {
                   <Flag
                     code={teamSummary.team.flagCode}
                     name={teamSummary.team.name}
-                    size={60}
+                    size={34}
                   />
                   <Box>
                     <Text className="top-team-name" data-testid="team-summary-name">
@@ -1210,17 +1237,16 @@ function App() {
                 </div>
               </Box>
               </Box>
-              <Box mt={3}>
-                <Text className="ui-subtitle">Последние 10 матчей</Text>
-                <Box className="top-team-form">
-                  {Array.from({ length: 10 }).map((_, index) => {
-                    const offset = Math.max(0, 10 - teamSummary.last10.length);
-                    const result =
-                      index < offset ? "E" : teamSummary.last10[index - offset] ?? "E";
-                    return <span key={index} className="form-dot" data-result={result} />;
-                  })}
+              {teamSummary.last10.length > 0 && (
+                <Box mt={3}>
+                  <Text className="ui-subtitle">Последние игры</Text>
+                  <Box className="top-team-form">
+                    {teamSummary.last10.map((result, index) => (
+                      <span key={index} className="form-dot" data-result={result} />
+                    ))}
+                  </Box>
                 </Box>
-              </Box>
+              )}
             </>
           ) : (
             <Text fontSize="sm" color="gray.500">

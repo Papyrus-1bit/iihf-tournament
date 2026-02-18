@@ -93,7 +93,20 @@ const Calendar: React.FC<Props> = ({
     return null;
   }, [allMatches]);
 
-  const handleSimulateDay = (date: string, pool?: Match[]) => {
+  const focusNextDate = (date: string) => {
+    const index = orderedDates.indexOf(date);
+    if (index === -1) return;
+    const nextDate = orderedDates[index + 1];
+    if (!nextDate) return;
+    requestAnimationFrame(() => {
+      const el = scrollRef.current?.querySelector(
+        `[data-date="${nextDate}"]`
+      ) as HTMLElement | null;
+      el?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    });
+  };
+
+  const handleSimulateDay = (date: string, pool?: Match[], advanceFocus = false) => {
     const matches = pool ?? matchesByDate.get(date) ?? [];
     matches.forEach((match) => {
       if (match.homeScore !== undefined && match.awayScore !== undefined) return;
@@ -109,6 +122,9 @@ const Calendar: React.FC<Props> = ({
         shootout: result.shootout,
       });
     });
+    if (advanceFocus) {
+      focusNextDate(date);
+    }
   };
 
   if (orderedDates.length === 0) {
@@ -188,6 +204,7 @@ const Calendar: React.FC<Props> = ({
               scrollSnapAlign="start"
               className="calendar-day"
               data-upcoming={isUpcoming}
+              data-date={date}
             >
               <Box className="calendar-day-header">
                 <Box>
@@ -197,7 +214,10 @@ const Calendar: React.FC<Props> = ({
                   </Text>
                 </Box>
                 {allowSimulateDay && (
-                  <IconButton onClick={() => handleSimulateDay(date)} aria-label="Симулировать день">
+                  <IconButton
+                    onClick={() => handleSimulateDay(date, matches, true)}
+                    aria-label="Симулировать день"
+                  >
                     <FiPlay />
                   </IconButton>
                 )}

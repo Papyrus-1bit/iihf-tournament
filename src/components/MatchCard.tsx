@@ -40,6 +40,7 @@ const MatchCard: React.FC<Props> = ({
     (playerTeamIds.includes(match.home.id) || playerTeamIds.includes(match.away.id));
   const manualEnabled = !isLocked;
   const simulateEnabled = !isLocked;
+  const isPlayed = match.homeScore !== undefined && match.awayScore !== undefined;
   const roundLabels: Record<string, string> = {
     R16: "1/8",
     QF: "1/4",
@@ -187,18 +188,21 @@ const MatchCard: React.FC<Props> = ({
               onFocus={(e) => e.currentTarget.select()}
             />
             {extraLabel && <span className="match-compact-ot">{extraLabel}</span>}
+            {marker && <span className="match-compact-marker" data-result={marker}>{marker}</span>}
           </span>
           <Box className="match-compact-team right">
             <span>{getShortName(match.away.name)}</span>
             <FederationLogo code={match.away.flagCode} name={match.away.name} size={26} />
           </Box>
-          <IconButton
-            onClick={handleSimulate}
-            disabled={!simulateEnabled}
-            aria-label="Симулировать матч"
-          >
-            <FiPlay />
-          </IconButton>
+          {!isPlayed && (
+            <IconButton
+              onClick={handleSimulate}
+              disabled={!simulateEnabled}
+              aria-label="Симулировать матч"
+            >
+              <FiPlay />
+            </IconButton>
+          )}
         </Box>
       </Box>
     );
@@ -290,13 +294,15 @@ const MatchCard: React.FC<Props> = ({
       <Box className="match-card-controls">
         <Box className="match-card-toggle">
           <Text className="match-team-meta">СИМ</Text>
-          <IconButton
-            onClick={handleSimulate}
-            disabled={!simulateEnabled}
-            aria-label="Симулировать матч"
-          >
-            <FiPlay />
-          </IconButton>
+          {!isPlayed && (
+            <IconButton
+              onClick={handleSimulate}
+              disabled={!simulateEnabled}
+              aria-label="Симулировать матч"
+            >
+              <FiPlay />
+            </IconButton>
+          )}
         </Box>
         <Box className="match-card-toggle">
           <label className="match-toggle">
