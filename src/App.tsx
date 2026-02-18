@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, Input, Text } from "@chakra-ui/react";
 import TournamentSetup from "./components/TournamentSetup";
 import GroupEditor from "./components/GroupEditor";
@@ -299,6 +299,12 @@ function App() {
     setUnassigned((prev) => prev.map((team) => teamMap.get(team.id) ?? team));
   }, [teams]);
 
+  const overallStats = useMemo(() => calculateOverallStats(groups), [groups]);
+  const groupStats = useMemo(
+    () => groups.map((group) => calculateGroupStats(group)),
+    [groups]
+  );
+
   useEffect(() => {
     if (teams.length === 0) return;
     if (selectedTeamId && teams.some((team) => team.id === selectedTeamId)) {
@@ -309,12 +315,11 @@ function App() {
       setSelectedTeamId(stored);
       return;
     }
-    const preferred =
-      calculateOverallStats(groups)[0]?.team?.id ?? teams[0]?.id ?? null;
+    const preferred = overallStats[0]?.team?.id ?? teams[0]?.id ?? null;
     if (preferred) {
       setSelectedTeamId(preferred);
     }
-  }, [teams, groups, selectedTeamId]);
+  }, [teams, overallStats, selectedTeamId]);
 
   useEffect(() => {
     if (!selectedTeamId) return;
@@ -599,15 +604,20 @@ function App() {
     setRatings(nextRatings);
   }, [teams, baseRatings, groups, playoffMatches]);
 
-  const groupMatches = groups.flatMap((group) => group.matches);
-  const allMatches = [...groupMatches, ...playoffMatches];
-  const bracketSize = getBracketSize(groups);
-  const initialRound = getRoundForSize(bracketSize);
+  const groupMatches = useMemo(
+    () => groups.flatMap((group) => group.matches),
+    [groups]
+  );
+  const allMatches = useMemo(
+    () => [...groupMatches, ...playoffMatches],
+    [groupMatches, playoffMatches]
+  );
+  const bracketSize = useMemo(() => getBracketSize(groups), [groups]);
+  const initialRound = useMemo(() => getRoundForSize(bracketSize), [bracketSize]);
   const totalTeams = teams.length;
   const unassignedCount = unassigned.length;
   const groupCount = groups.length;
-  const teamSummary = (() => {
-    const overallStats = calculateOverallStats(groups);
+  const teamSummary = useMemo(() => {
     const fallbackTeam =
       teams.length > 0
         ? [...teams].sort(
@@ -660,12 +670,10 @@ function App() {
       winPct,
       last10,
     };
-  })();
+  }, [allMatches, overallStats, selectedTeamId, teams]);
 
   const buildSeeding = (size: number) => {
     if (size === 0) return [];
-    const overallStats = calculateOverallStats(groups);
-    const groupStats = groups.map((group) => calculateGroupStats(group));
 
     if (playoffSeeding === "overall") {
       return overallStats.slice(0, size).map((s) => s.team);
@@ -709,12 +717,12 @@ function App() {
     const perGroup = Math.floor(seeded.length / 2);
     if (perGroup === 0) return null;
     const seededIds = new Set(seeded.map((team) => team.id));
-    const groupStats = groups.map((group) =>
-      calculateGroupStats(group).filter((stat) => seededIds.has(stat.teamId))
+    const filtered = groupStats.map((stats) =>
+      stats.filter((stat) => seededIds.has(stat.teamId))
     );
-    if (groupStats.some((stats) => stats.length < perGroup)) return null;
-    const groupA = groupStats[0].slice(0, perGroup).map((stat) => stat.team);
-    const groupB = groupStats[1].slice(0, perGroup).map((stat) => stat.team);
+    if (filtered.some((stats) => stats.length < perGroup)) return null;
+    const groupA = filtered[0].slice(0, perGroup).map((stat) => stat.team);
+    const groupB = filtered[1].slice(0, perGroup).map((stat) => stat.team);
     return groupA.map(
       (team, index) => [team, groupB[perGroup - 1 - index]] as [Team, Team]
     );
@@ -791,14 +799,23 @@ function App() {
     return [match];
   };
 
-  const groupStageComplete =
-    groupMatches.length > 0 &&
-    groupMatches.every((match) => match.homeScore !== undefined && match.awayScore !== undefined);
-
-  const participantTeams = Array.from(
-    new Map(groups.flatMap((group) => group.teams).map((team) => [team.id, team])).values()
+  const groupStageComplete = useMemo(
+    () =>
+      groupMatches.length > 0 &&
+      groupMatches.every(
+        (match) => match.homeScore !== undefined && match.awayScore !== undefined
+      ),
+    [groupMatches]
   );
-  const eliminatedTeamIds = (() => {
+
+  const participantTeams = useMemo(
+    () =>
+      Array.from(
+        new Map(groups.flatMap((group) => group.teams).map((team) => [team.id, team])).values()
+      ),
+    [groups]
+  );
+  const eliminatedTeamIds = useMemo(() => {
     const eliminated = new Set<string>();
     if (!isTournamentCreated) return eliminated;
     if (groupStageComplete && bracketSize >= 4) {
@@ -815,7 +832,13 @@ function App() {
       eliminated.add(loser.id);
     });
     return eliminated;
-  })();
+  }, [
+    isTournamentCreated,
+    groupStageComplete,
+    bracketSize,
+    participantTeams,
+    playoffMatches,
+  ]);
 
   useEffect(() => {
     if (!isTournamentCreated) return;
@@ -1007,8 +1030,13 @@ function App() {
     playoffMatches,
   ]);
 
-  const displayBaseRanks =
-    Object.keys(tournamentBaseRanks).length > 0 ? tournamentBaseRanks : buildRankMap(baseRatings);
+  const displayBaseRanks = useMemo(
+    () =>
+      Object.keys(tournamentBaseRanks).length > 0
+        ? tournamentBaseRanks
+        : buildRankMap(baseRatings),
+    [tournamentBaseRanks, baseRatings]
+  );
   
   return (
     <UiRoot>
