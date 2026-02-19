@@ -243,12 +243,27 @@
   align-items: flex-start;
 }
 
+.team-card__line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
 .team-card__name {
   font-weight: 600;
   font-size: 13px;
 }
 
 .team-card__meta {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ui-muted);
+}
+
+.team-card__meta-inline {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -271,10 +286,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgba(245, 245, 247, 0.88);
-  background: rgba(245, 245, 247, 0.16);
+  color: #050507;
+  background: #f5c84a;
   flex: 0 0 auto;
   font-size: 10px;
+  box-shadow: 0 0 0 1px rgba(245, 200, 74, 0.35);
 }
 
 .team-card[data-selected=\"true\"] {

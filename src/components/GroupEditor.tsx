@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { FC, DragEvent, Dispatch, SetStateAction } from "react";
 import { Box, Button, Text } from "@chakra-ui/react";
 import { FiUser } from "react-icons/fi";
@@ -16,6 +17,8 @@ interface Props {
   lineCards?: boolean;
 }
 
+type DivisionFilter = "all" | "d1" | "d2" | "d3";
+
 const GroupEditor: FC<Props> = ({
   groups,
   setGroups,
@@ -27,6 +30,23 @@ const GroupEditor: FC<Props> = ({
   maxTeamsPerGroup,
   lineCards = false,
 }) => {
+  const [divisionFilter, setDivisionFilter] = useState<DivisionFilter>("all");
+
+  const getDivision = (team: Team): Exclude<DivisionFilter, "all"> => {
+    const rank = team.iihfRank ?? Number.POSITIVE_INFINITY;
+    if (rank <= 16) return "d1";
+    if (rank <= 24) return "d2";
+    return "d3";
+  };
+
+  const getDivisionLabel = (team: Team) => {
+    const division = getDivision(team);
+    return division === "d1" ? "Див 1" : division === "d2" ? "Див 2" : "Див 3";
+  };
+
+  const isInDivision = (team: Team, filter: DivisionFilter) =>
+    filter === "all" ? true : getDivision(team) === filter;
+
   const normalize = (value: number, min: number, max: number) => {
     if (max <= min) return 0.5;
     return (value - min) / (max - min);
@@ -71,9 +91,10 @@ const GroupEditor: FC<Props> = ({
     return ratingNorm * 0.55 + ovrNorm * 0.3 + rankNorm * 0.15;
   };
 
-  const handleAutoDistribute = () => {
+  const handleAutoDistribute = (filter: DivisionFilter = divisionFilter) => {
     const capacity = maxTeamsPerGroup ?? Number.POSITIVE_INFINITY;
-    const pool = [...groups.flatMap((group) => group.teams), ...unassigned];
+    const fullPool = Array.from(new Map(allTeams.map((team) => [team.id, team])).values());
+    const pool = fullPool.filter((team) => isInDivision(team, filter));
     if (pool.length === 0 || groups.length === 0) return;
 
     const uniquePool = Array.from(new Map(pool.map((team) => [team.id, team])).values());
@@ -129,8 +150,10 @@ const GroupEditor: FC<Props> = ({
       }
     });
 
+    const filteredOut = fullPool.filter((team) => !isInDivision(team, filter));
     setGroups(nextGroups);
-    setUnassigned(nextUnassigned);
+    setUnassigned([...filteredOut, ...nextUnassigned]);
+    setDivisionFilter(filter);
   };
   const handleGroupNameChange = (groupIndex: number, name: string) => {
     const next = [...groups];
@@ -185,6 +208,7 @@ const GroupEditor: FC<Props> = ({
   const renderTeam = (team: Team, fromId: string) => {
     const isSelected = playerTeamIds.includes(team.id);
     const ovrLabel = team.ovr ? `OVR ${team.ovr}` : "OVR —";
+    const divisionLabel = getDivisionLabel(team);
     const cardClass = lineCards ? "team-card team-card--line" : "team-card";
     const flagSize = lineCards ? 24 : 28;
     return (
@@ -202,9 +226,10 @@ const GroupEditor: FC<Props> = ({
       data-selected={isSelected}
     >
       <Flag code={team.flagCode} name={team.name} size={flagSize} />
-      <Box>
-        <Text className="team-card__name">{team.name}</Text>
-        <Text className="team-card__meta">{ovrLabel}</Text>
+      <Box className="team-card__line">
+        <span className="team-card__name">{team.name}</span>
+        <span className="team-card__meta-inline">{ovrLabel}</span>
+        <span className="team-card__meta-inline">{divisionLabel}</span>
       </Box>
       {isSelected && (
         <span className="team-card__person" title="Выбранная команда">
@@ -219,8 +244,38 @@ const GroupEditor: FC<Props> = ({
     <Box mb={4}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} gap={2}>
         <Text className="ui-section-title">Распределение команд по группам</Text>
-        <Button size="sm" variant="outline" onClick={handleAutoDistribute}>
+        <Button size="sm" variant="outline" onClick={() => handleAutoDistribute()}>
           Автораспределение
+        </Button>
+      </Box>
+      <Box display="flex" gap={2} flexWrap="wrap" mb={2}>
+        <Button
+          size="xs"
+          variant={divisionFilter === "all" ? "solid" : "outline"}
+          onClick={() => handleAutoDistribute("all")}
+        >
+          Все команды
+        </Button>
+        <Button
+          size="xs"
+          variant={divisionFilter === "d1" ? "solid" : "outline"}
+          onClick={() => handleAutoDistribute("d1")}
+        >
+          Дивизион 1
+        </Button>
+        <Button
+          size="xs"
+          variant={divisionFilter === "d2" ? "solid" : "outline"}
+          onClick={() => handleAutoDistribute("d2")}
+        >
+          Дивизион 2
+        </Button>
+        <Button
+          size="xs"
+          variant={divisionFilter === "d3" ? "solid" : "outline"}
+          onClick={() => handleAutoDistribute("d3")}
+        >
+          Дивизион 3
         </Button>
       </Box>
       <Text fontSize="xs" color="gray.500" mb={2}>
