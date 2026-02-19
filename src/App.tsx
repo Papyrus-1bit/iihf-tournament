@@ -239,27 +239,57 @@ const shuffle = <T,>(items: T[]) => {
 
 const FIRST_TOURNAMENT_YEAR = 2025;
 
-const extractTournamentYear = (value: string) => {
-  const match = value.match(/IIHF\s+(\d{4})/i);
-  if (!match) return null;
-  const year = Number(match[1]);
-  return Number.isFinite(year) ? year : null;
+const extractTournamentMeta = (value: string) => {
+  const divFormat = value.match(/IIHF\s+DIV\s+(\d+)\s+(\d{4})/i);
+  if (divFormat) {
+    const division = Number(divFormat[1]);
+    const year = Number(divFormat[2]);
+    if (Number.isFinite(division) && Number.isFinite(year)) {
+      return { division, year };
+    }
+  }
+
+  const legacyFormat = value.match(/IIHF\s+(\d{4})/i);
+  if (legacyFormat) {
+    const year = Number(legacyFormat[1]);
+    if (Number.isFinite(year)) {
+      return { division: 1, year };
+    }
+  }
+
+  return null;
 };
 
-const getNextTournamentName = (
-  saves: TournamentSave[],
-  currentTournamentName = ""
-) => {
+const getTeamDivision = (team: Team) => {
+  const rank = team.iihfRank ?? Number.POSITIVE_INFINITY;
+  if (rank <= 16) return 1;
+  if (rank <= 24) return 2;
+  return 3;
+};
+
+const inferTournamentDivision = (groups: Group[]) => {
+  const participants = groups.flatMap((group) => group.teams);
+  if (participants.length === 0) return 1;
+  const divisions = new Set(participants.map(getTeamDivision));
+  if (divisions.size === 1) {
+    return Array.from(divisions)[0];
+  }
+  return 1;
+};
+
+const getNextTournamentName = (saves: TournamentSave[], division: number) => {
   let maxYear = FIRST_TOURNAMENT_YEAR - 1;
-  const currentYear = extractTournamentYear(currentTournamentName);
-  if (currentYear) maxYear = Math.max(maxYear, currentYear);
   saves.forEach((save) => {
-    const fromSaveName = extractTournamentYear(save.name);
-    const fromDataName = extractTournamentYear(save.data?.tournamentName ?? "");
-    if (fromSaveName) maxYear = Math.max(maxYear, fromSaveName);
-    if (fromDataName) maxYear = Math.max(maxYear, fromDataName);
+    const fromSaveName = extractTournamentMeta(save.name);
+    const fromDataName = extractTournamentMeta(save.data?.tournamentName ?? "");
+    if (fromSaveName?.division === division) {
+      maxYear = Math.max(maxYear, fromSaveName.year);
+    }
+    if (fromDataName?.division === division) {
+      maxYear = Math.max(maxYear, fromDataName.year);
+    }
   });
-  return `IIHF ${maxYear + 1}`;
+  return `IIHF DIV ${division} ${maxYear + 1}`;
 };
 
 function App() {
@@ -448,6 +478,10 @@ function App() {
   }, [teams]);
 
   const overallStats = useMemo(() => calculateOverallStats(groups), [groups]);
+  const inferredTournamentDivision = useMemo(
+    () => inferTournamentDivision(groups),
+    [groups]
+  );
   const groupStats = useMemo(
     () => groups.map((group) => calculateGroupStats(group)),
     [groups]
@@ -507,7 +541,7 @@ function App() {
   const handleCreateTournament = () => {
     if (groups.length === 0) return;
     if (!tournamentName.trim()) {
-      setTournamentName(getNextTournamentName(savedTournaments, tournamentName));
+      setTournamentName(getNextTournamentName(savedTournaments, inferredTournamentDivision));
     }
     const rawMatches = generateGroupMatches(groups);
     const scheduledMatches = assignMatchDates(rawMatches, getTournamentStartDate());
@@ -525,7 +559,7 @@ function App() {
 
   const handleOpenSetup = () => {
     if (!isTournamentCreated || !tournamentName.trim()) {
-      setTournamentName(getNextTournamentName(savedTournaments, tournamentName));
+      setTournamentName(getNextTournamentName(savedTournaments, inferredTournamentDivision));
     }
     setIsSetupOpen(true);
   };
@@ -613,7 +647,7 @@ function App() {
         : `save-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     const name =
       tournamentName?.trim() ||
-      getNextTournamentName(savedTournaments, tournamentName);
+      getNextTournamentName(savedTournaments, inferredTournamentDivision);
     const data = { ...buildSaveData(), saveId: id };
     const save: TournamentSave = {
       id,
@@ -637,6 +671,9 @@ function App() {
     persistSaves(next);
     if (activeSaveId === saveId) {
       setActiveSaveId(null);
+    }
+    if (next.length === 0) {
+      setTournamentName("");
     }
     handleRebuildRatingsFromSaves(next);
   };
@@ -1475,18 +1512,22 @@ function App() {
   return (
     <UiRoot>
       <Box p={4} maxW="1120px" mx="auto" className="ui-stack">
-      <button
-        type="button"
-        className="hero-create-button"
-        onClick={handleOpenSetup}
-        title="Создать турнир"
-        aria-label="Создать турнир"
-      >
-        <span className="hero-create-icon">
-          <FiPlus />
-        </span>
-        <span className="hero-create-label">Создать турнир</span>
-      </button>
+      <Box className="hero-floating-nav" role="navigation" aria-label="Навигация турнира">
+        <Box className="hero-floating-nav__panel">
+          <button
+            type="button"
+            className="hero-create-button"
+            onClick={handleOpenSetup}
+            title="Создать турнир"
+            aria-label="Создать турнир"
+          >
+            <span className="hero-create-icon">
+              <FiPlus />
+            </span>
+          </button>
+        </Box>
+        <span className="hero-floating-nav__label">Создать турнир</span>
+      </Box>
       <input
         ref={fileInputRef}
         type="file"
@@ -1635,17 +1676,21 @@ function App() {
                   </Box>
                 </Box>
                 <Box className="team-summary-right">
-                  <span className="team-summary-factoid-label">{teamSummary.played} матчей</span>
-                  <div
-                    className="win-rate-gauge"
-                    style={{
-                      background: `conic-gradient(${winGaugeColor} ${winGaugeAngle}deg, rgba(255,255,255,0.14) 0deg)`,
-                    }}
-                  >
-                    <div className="win-rate-gauge__inner">
-                      <strong>{teamSummary.winPct}%</strong>
-                    </div>
-                  </div>
+                  {teamSummary.played > 0 && (
+                    <>
+                      <span className="team-summary-factoid-label">{teamSummary.played} матчей</span>
+                      <div
+                        className="win-rate-gauge"
+                        style={{
+                          background: `conic-gradient(${winGaugeColor} ${winGaugeAngle}deg, rgba(255,255,255,0.14) 0deg)`,
+                        }}
+                      >
+                        <div className="win-rate-gauge__inner">
+                          <strong>{teamSummary.winPct}%</strong>
+                        </div>
+                      </div>
+                    </>
+                  )}
                   <Box className="team-summary-medals-empty">
                     <span className="team-summary-medals-stack">
                       <i data-medal="gold" />
@@ -1664,7 +1709,7 @@ function App() {
           )}
         </Box>
 
-        <Box className="ui-card">
+        <Box className="rating-shell">
           <Box className="rating-card-header">
             <Text className="ui-subtitle">Рейтинг команд</Text>
             <Box display="flex" gap={1}>
