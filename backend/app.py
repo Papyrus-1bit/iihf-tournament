@@ -17,11 +17,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-STATE_FILE = "state.json"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATE_FILE = os.path.join(BASE_DIR, "state.json")
+COUNTRIES_FILE = os.path.join(BASE_DIR, "countries.json")
 
 # ===== Страны =====
-with open("countries.json", "r", encoding="utf-8") as f:
-    countries = json.load(f)
+def load_countries():
+    with open(COUNTRIES_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def refresh_countries():
+    global countries
+    countries = load_countries()
+    return countries
+
+countries = load_countries()
 
 if os.path.exists(STATE_FILE):
     with open(STATE_FILE, "r", encoding="utf-8") as f:
@@ -144,10 +154,12 @@ class CreateTournament(BaseModel):
 # ===== Endpoints =====
 @app.get("/countries")
 def get_countries():
+    refresh_countries()
     return countries
 
 @app.post("/tournament/setup")
 def setup_tournament(data: CreateTournament):
+    refresh_countries()
     # Если есть группы_data, используем её
     if data.groups_data:
         groups = data.groups_data
@@ -160,6 +172,7 @@ def setup_tournament(data: CreateTournament):
 
 @app.post("/tournament/create")
 def create_tournament(data: CreateTournament):
+    refresh_countries()
     if data.groups_data:
         groups = data.groups_data
     else:
@@ -224,6 +237,7 @@ def manual_score(match_id: int, score: ManualScore):
 
 @app.get("/iihf")
 def get_iihf_ranking():
+    refresh_countries()
     ranking = []
     for code, c in countries.items():
         elo = 0

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:ui": ".venv/bin/python -m pytest tests/test_ui.py -q"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.33.0",

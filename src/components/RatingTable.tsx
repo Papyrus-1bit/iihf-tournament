@@ -50,6 +50,7 @@ const RatingTable: FC<Props> = ({
         </Box>
         {ratings.map((team, index) => {
           const currentRank = index + 1;
+          const division = currentRank <= 16 ? 1 : currentRank <= 24 ? 2 : 3;
           const delta = ratingDeltas[team.id] ?? 0;
           const deltaColor = delta > 0 ? "green.600" : delta < 0 ? "red.600" : "gray.500";
           const podiumStats = podium[team.id] ?? emptyPodium;
@@ -63,12 +64,13 @@ const RatingTable: FC<Props> = ({
               py={1}
               style={highlight}
               className="table-row rating-row"
+              data-division={division}
               data-selected={isSelected}
               data-testid={`rating-row-${team.id}`}
               onClick={() => onSelectTeam?.(team.id)}
               cursor={onSelectTeam ? "pointer" : "default"}
             >
-              <Box>{currentRank}</Box>
+              <Box className="rating-rank-cell">{currentRank}</Box>
               <Box display="flex" alignItems="center" gap={2}>
                 <span className="rating-flag">
                   <Flag code={team.flagCode} name={team.name} size={20} />
@@ -84,15 +86,13 @@ const RatingTable: FC<Props> = ({
                 <Text as="span" fontWeight="bold">
                   {team.rating.toFixed(0)}
                 </Text>{" "}
-                <Text as="span" fontSize="sm" color={deltaColor}>
-                  {delta === 0 ? (
-                    "—"
-                  ) : (
+                {delta !== 0 && (
+                  <Text as="span" fontSize="sm" color={deltaColor}>
                     <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
                       {delta > 0 ? <FiTrendingUp /> : <FiTrendingDown />} {Math.abs(delta)}
                     </span>
-                  )}
-                </Text>
+                  </Text>
+                )}
               </Box>
             </Box>
           );

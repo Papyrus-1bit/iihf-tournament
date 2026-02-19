@@ -143,7 +143,6 @@ const GroupEditor: FC<Props> = ({
 
   return (
     <Box mb={4}>
-      <Text className="ui-kicker">Настройка состава</Text>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} gap={2}>
         <Text className="ui-section-title">Распределение команд по группам</Text>
         <Button size="sm" variant="outline" onClick={handleAutoDistribute}>
@@ -172,7 +171,9 @@ const GroupEditor: FC<Props> = ({
                 style={{ width: "100%" }}
               />
               <Text fontSize="sm" color="gray.500" whiteSpace="nowrap">
-                {group.teams.length} команд
+                {maxTeamsPerGroup
+                  ? `${group.teams.length}/${maxTeamsPerGroup} команд`
+                  : `${group.teams.length} команд`}
               </Text>
             </Box>
             {group.teams.length === 0 && (

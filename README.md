@@ -9,7 +9,9 @@ A local, single-page simulator for an IIHF-style tournament. The app supports gr
 - Manual score input, OT/SO handling, and result markers
 - Playoffs (R16, QF, SF, Final, 3rd place) with seeding rules
 - Standings tab with overall or per-group view
-- Rating table with OVR and delta indicators
+- Rating table with OVR and rating delta indicators
+- Auto-save of the current tournament state (restored on reload)
+- Final tournament screen with podium and rating change summary
 - Player team selection highlighting
 - Local saves plus JSON export/import (drag-and-drop supported)
 
@@ -28,8 +30,11 @@ A local, single-page simulator for an IIHF-style tournament. The app supports gr
 - `public/svg/` - flag assets (SVG)
 
 ## Data Files
-- `backend/countries.json` stores team name, rating_points, and ovr for the top 24 + RU/BY.
+- `backend/countries.json` stores team name, rating_points, ovr, and historical podiums for the top 32 national teams.
 - Flags are loaded from `public/svg/{code}.svg` using ISO country codes.
+- Historical medal fields (`podiums`) are based on open sources:
+  - IIHF Medallists: `https://www.iihf.com/en/statichub/4719/medallists`
+  - IIHF World Championship records (history context): `https://www.iihf.com/en/events/2025/wm/standings/final`
 
 ## Setup
 
@@ -52,22 +57,42 @@ npm run dev
 Optional env:
 - `VITE_API_BASE` (default: `http://localhost:8000`)
 
+## UI Tests (pytest + Selenium)
+```
+cd iihf-tournament
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r tests/requirements.txt
+```
+
+Run tests (frontend must be running on `http://localhost:5173`):
+```
+npm run dev
+# in another terminal
+npm run test:ui
+```
+
+If Chrome/Chromium is installed, Selenium Manager will auto-resolve WebDriver.
+
 ## Usage
 1. Open the `Tournament` tab and set group parameters.
 2. Drag teams into groups, or use auto-distribution.
 3. Click team cards to mark player teams.
 4. Choose playoff seeding and bracket rules.
 5. Create the tournament to generate schedule.
-6. Use the calendar to play/simulate matches day-by-day.
+6. Use the calendar to play/simulate matches day-by-day (auto-advance to next day on sim).
 7. Check standings and playoff tabs for progress.
 8. Ratings update after tournament completion. Use reset to restore defaults.
 
 ## Saves
 - Save stores the current tournament snapshot in localStorage.
+- Auto-save stores the latest tournament state on each update.
 - Export writes a JSON file. Import accepts JSON files (button or drag-and-drop).
 - Storage keys:
   - `iihfTournamentSaves`
   - `iihfRatings`
+  - `iihfRatingDelta`
+  - `iihfCurrentTournament`
 
 Example export payload:
 ```
@@ -85,6 +110,7 @@ Example export payload:
     "playerTeamIds": [],
     "isTournamentCreated": false,
     "tournamentBaseRanks": {},
+    "tournamentBaseRatings": {},
     "ratingsCommitted": false
   }
 }

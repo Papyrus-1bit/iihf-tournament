@@ -13,7 +13,7 @@ import {
   FiDownload,
   FiEdit2,
   FiFolder,
-  FiPlusSquare,
+  FiPlus,
   FiRefreshCw,
   FiRotateCcw,
   FiSave,
@@ -237,6 +237,31 @@ const shuffle = <T,>(items: T[]) => {
   return next;
 };
 
+const FIRST_TOURNAMENT_YEAR = 2025;
+
+const extractTournamentYear = (value: string) => {
+  const match = value.match(/IIHF\s+(\d{4})/i);
+  if (!match) return null;
+  const year = Number(match[1]);
+  return Number.isFinite(year) ? year : null;
+};
+
+const getNextTournamentName = (
+  saves: TournamentSave[],
+  currentTournamentName = ""
+) => {
+  let maxYear = FIRST_TOURNAMENT_YEAR - 1;
+  const currentYear = extractTournamentYear(currentTournamentName);
+  if (currentYear) maxYear = Math.max(maxYear, currentYear);
+  saves.forEach((save) => {
+    const fromSaveName = extractTournamentYear(save.name);
+    const fromDataName = extractTournamentYear(save.data?.tournamentName ?? "");
+    if (fromSaveName) maxYear = Math.max(maxYear, fromSaveName);
+    if (fromDataName) maxYear = Math.max(maxYear, fromDataName);
+  });
+  return `IIHF ${maxYear + 1}`;
+};
+
 function App() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [isTournamentCreated, setIsTournamentCreated] = useState(false);
@@ -263,7 +288,6 @@ function App() {
   const [activeSaveId, setActiveSaveId] = useState<string | null>(null);
   const [editingSaveId, setEditingSaveId] = useState<string | null>(null);
   const [editingSaveName, setEditingSaveName] = useState("");
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isImportDrag, setIsImportDrag] = useState(false);
   const [isSetupOpen, setIsSetupOpen] = useState(false);
   const [teamsLoading, setTeamsLoading] = useState(true);
@@ -482,6 +506,9 @@ function App() {
 
   const handleCreateTournament = () => {
     if (groups.length === 0) return;
+    if (!tournamentName.trim()) {
+      setTournamentName(getNextTournamentName(savedTournaments, tournamentName));
+    }
     const rawMatches = generateGroupMatches(groups);
     const scheduledMatches = assignMatchDates(rawMatches, getTournamentStartDate());
     const scheduledGroups = applyMatchesToGroups(groups, scheduledMatches);
@@ -496,9 +523,15 @@ function App() {
     setShowFinalScreen(false);
   };
 
+  const handleOpenSetup = () => {
+    if (!isTournamentCreated || !tournamentName.trim()) {
+      setTournamentName(getNextTournamentName(savedTournaments, tournamentName));
+    }
+    setIsSetupOpen(true);
+  };
+
   const handleCloseSetup = () => {
     setIsSetupOpen(false);
-    setIsEditingTitle(false);
   };
 
 
@@ -580,7 +613,7 @@ function App() {
         : `save-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     const name =
       tournamentName?.trim() ||
-      `Турнир ${new Date().toLocaleDateString("ru-RU")}`;
+      getNextTournamentName(savedTournaments, tournamentName);
     const data = { ...buildSaveData(), saveId: id };
     const save: TournamentSave = {
       id,
@@ -1442,6 +1475,18 @@ function App() {
   return (
     <UiRoot>
       <Box p={4} maxW="1120px" mx="auto" className="ui-stack">
+      <button
+        type="button"
+        className="hero-create-button"
+        onClick={handleOpenSetup}
+        title="Создать турнир"
+        aria-label="Создать турнир"
+      >
+        <span className="hero-create-icon">
+          <FiPlus />
+        </span>
+        <span className="hero-create-label">Создать турнир</span>
+      </button>
       <input
         ref={fileInputRef}
         type="file"
@@ -1472,16 +1517,6 @@ function App() {
               )}
             </Box>
             <Box className="hero-actions">
-              <button
-                type="button"
-                className="hero-create-button"
-                onClick={() => setIsSetupOpen(true)}
-                title="Создать турнир"
-                aria-label="Создать турнир"
-              >
-                <FiPlusSquare />
-                <span>Создать турнир</span>
-              </button>
               {isTournamentCreated && (
                 <>
                   <IconButton
@@ -1565,7 +1600,11 @@ function App() {
         <Box className="ui-card team-summary-card" data-testid="team-summary-card">
           {teamSummary ? (
             <>
-              <Box className="team-summary-hero">
+              <Box
+                className={`team-summary-hero${
+                  teamSummary.last10.length === 0 ? " team-summary-hero--centered" : ""
+                }`}
+              >
                 <Box className="team-summary-left">
                   <FederationLogo
                     code={teamSummary.team.flagCode}
@@ -1584,6 +1623,15 @@ function App() {
                     <Text className="top-team-name" data-testid="team-summary-name">
                       {teamSummary.team.name}
                     </Text>
+                    {teamSummary.last10.length > 0 && (
+                      <Box className="team-summary-last-games">
+                        <Box className="top-team-form">
+                          {teamSummary.last10.map((result, index) => (
+                            <span key={index} className="form-dot" data-result={result} />
+                          ))}
+                        </Box>
+                      </Box>
+                    )}
                   </Box>
                 </Box>
                 <Box className="team-summary-right">
@@ -1608,16 +1656,6 @@ function App() {
                   </Box>
                 </Box>
               </Box>
-              {teamSummary.last10.length > 0 && (
-                <Box mt={3} className="team-summary-last-games">
-                  <Text className="ui-subtitle">Последние игры</Text>
-                  <Box className="top-team-form">
-                    {teamSummary.last10.map((result, index) => (
-                      <span key={index} className="form-dot" data-result={result} />
-                    ))}
-                  </Box>
-                </Box>
-              )}
             </>
           ) : (
             <Text fontSize="sm" color="gray.500">
@@ -1686,33 +1724,7 @@ function App() {
             </Box>
             <Box className="ui-modal-body">
               <Box className="ui-panel ui-panel-plain">
-                <Text fontSize="sm" color="gray.500" mb={1}>
-                  Название турнира
-                </Text>
-                {isEditingTitle ? (
-                  <Input
-                    size="sm"
-                    value={tournamentName}
-                    onChange={(e) => setTournamentName(e.target.value)}
-                    onBlur={() => setIsEditingTitle(false)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") setIsEditingTitle(false);
-                    }}
-                    autoFocus
-                  />
-                ) : (
-                  <Text
-                    fontSize="sm"
-                    cursor="pointer"
-                    onClick={() => setIsEditingTitle(true)}
-                  >
-                    {tournamentName.trim() || "Нажмите, чтобы задать название"}
-                  </Text>
-                )}
-              </Box>
-              <Box className="ui-divider" />
-              <Box className="ui-panel ui-panel-plain">
-                <Text className="ui-section-title">Настройка групп</Text>
+                <Text className="ui-section-title">Групповой этап</Text>
                 <Box mt={3}>
                   <TournamentSetup teams={teams} onCreate={handleCreateGroups} embedded />
                 </Box>
@@ -1722,7 +1734,7 @@ function App() {
                 <>
                   <Box className="ui-divider" />
                   <Box className="ui-panel ui-panel-plain">
-                    <Text className="ui-section-title">Настройки сетки</Text>
+                    <Text className="ui-section-title">Плей-офф</Text>
                     <Box mt={3} display="flex" gap={3} flexWrap="wrap" alignItems="center">
                       <label>
                         <select
@@ -1751,9 +1763,6 @@ function App() {
                           <option value="random">Случайные пары</option>
                         </select>
                       </label>
-                      <Text fontSize="sm" color="gray.500">
-                        Размер сетки: {bracketSize >= 4 ? bracketSize : "плей-офф не будет"}
-                      </Text>
                     </Box>
                   </Box>
 

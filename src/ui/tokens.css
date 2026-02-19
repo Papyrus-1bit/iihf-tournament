@@ -279,13 +279,43 @@
 
 .rating-row {
   display: grid;
-  grid-template-columns: 34px minmax(200px, 1.5fr) 54px 34px 34px 34px 56px 130px;
+  grid-template-columns: 52px minmax(200px, 1.5fr) 54px 34px 34px 34px 56px 130px;
   gap: 10px;
   align-items: center;
 }
 
+.rating-rank-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.rating-row[data-division="1"] {
+  background: rgba(34, 197, 94, 0.08);
+}
+
+.rating-row[data-division="2"] {
+  background: rgba(234, 179, 8, 0.08);
+}
+
+.rating-row[data-division="3"] {
+  background: rgba(56, 189, 248, 0.08);
+}
+
 .rating-row[data-selected="true"] {
-  background: rgba(59, 130, 246, 0.16);
+  background: rgba(245, 245, 247, 0.12);
+}
+
+.rating-row[data-selected="true"][data-division="1"] {
+  background: rgba(34, 197, 94, 0.22);
+}
+
+.rating-row[data-selected="true"][data-division="2"] {
+  background: rgba(234, 179, 8, 0.22);
+}
+
+.rating-row[data-selected="true"][data-division="3"] {
+  background: rgba(56, 189, 248, 0.24);
 }
 
 .rating-table-body .rating-row.table-row {
@@ -568,6 +598,10 @@
   padding: 0;
 }
 
+.team-summary-hero--centered {
+  align-items: center;
+}
+
 .team-summary-left {
   display: flex;
   align-items: flex-start;
@@ -644,6 +678,11 @@
   gap: 12px;
   margin-left: auto;
   align-self: flex-end;
+}
+
+.team-summary-hero--centered .team-summary-left,
+.team-summary-hero--centered .team-summary-right {
+  align-items: center;
 }
 
 .team-summary-factoid-label {
@@ -732,34 +771,59 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-top: 8px;
 }
 
 .hero-create-button {
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 120;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 0;
-  background: transparent;
-  box-shadow: none;
+  width: 44px;
+  height: 44px;
+  justify-content: center;
+  padding: 0 12px;
+  background: rgba(217, 20, 47, 0.96);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
   border: none;
-  min-height: 36px;
-  align-self: flex-start;
+  overflow: hidden;
   cursor: pointer;
   color: var(--ui-text);
   font-family: "Barlow Condensed", "Barlow", sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  text-transform: none;
+  letter-spacing: 0.03em;
   font-size: 16px;
+  transition: width 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
 }
 
 .hero-create-button:hover {
-  background: transparent;
-  box-shadow: none;
-  opacity: 0.9;
+  width: 190px;
+  justify-content: flex-start;
+  background: rgba(217, 20, 47, 1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.55);
 }
 
-.hero-create-button span {
+.hero-create-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
   line-height: 1;
+}
+
+.hero-create-label {
+  opacity: 0;
+  transform: translateX(8px);
+  white-space: nowrap;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.hero-create-button:hover .hero-create-label {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .hero-head-row {
@@ -803,19 +867,16 @@
   overflow: hidden;
 }
 
+.federation-logo--placeholder {
+  box-shadow: inset 0 0 0 1px rgba(245, 245, 247, 0.35);
+}
+
 .federation-logo__img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   object-position: center;
   display: block;
-  filter:
-    drop-shadow(0 0 0.8px rgba(255, 255, 255, 0.95))
-    drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
-}
-
-.federation-logo__img--blend {
-  mix-blend-mode: multiply;
 }
 
 .federation-logo__placeholder {
@@ -825,8 +886,9 @@
   align-items: center;
   justify-content: center;
   background: rgba(245, 245, 247, 0.08);
-  color: var(--ui-muted);
-  font-size: 12px;
+  color: rgba(245, 245, 247, 0.92);
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -882,6 +944,7 @@
   width: 12px;
   height: 12px;
   background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
 }
 
 .form-dot[data-result="W"] {
@@ -1275,6 +1338,37 @@
 
 .ui-select {
   padding-right: 42px;
+}
+
+.setup-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.setup-radio-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+  background: rgba(12, 13, 16, 0.95);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+}
+
+.setup-radio-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.setup-radio-option[data-active="true"] {
+  background: rgba(217, 20, 47, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(217, 20, 47, 0.7);
 }
 
 .ui-kicker {
