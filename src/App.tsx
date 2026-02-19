@@ -6,6 +6,7 @@ import Calendar from "./components/Calendar";
 import StandingsTable from "./components/StandingsTable";
 import RatingTable from "./components/RatingTable";
 import PlayoffBracket from "./components/PlayoffBracket";
+import TeamRosterPanel from "./components/TeamRosterPanel";
 import Flag from "./components/Flag";
 import FederationLogo from "./components/FederationLogo";
 import { IconButton, StatCard, UiRoot } from "./ui";
@@ -21,8 +22,8 @@ import {
   FiUpload,
   FiX,
 } from "react-icons/fi";
-import { Group, Match, MatchRound, PodiumCounts, Team } from "./types";
-import { fetchCountries } from "./api";
+import { Group, Match, MatchRound, PodiumCounts, Team, TeamRoster } from "./types";
+import { fetchCountries, fetchRosters } from "./api";
 import {
   applyMatchesToGroups,
   assignMatchDates,
@@ -324,6 +325,9 @@ function App() {
   const [teamsError, setTeamsError] = useState<string | null>(null);
   const [showFinalScreen, setShowFinalScreen] = useState(false);
   const [ratingAnimationKey, setRatingAnimationKey] = useState(0);
+  const [rostersByCode, setRostersByCode] = useState<Record<string, TeamRoster>>({});
+  const [rostersLoading, setRostersLoading] = useState(true);
+  const [rostersError, setRostersError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pendingAutoSaveRef = useRef<Partial<TournamentSaveData> | null>(null);
 
@@ -423,6 +427,26 @@ function App() {
       })
       .finally(() => {
         if (active) setTeamsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    fetchRosters()
+      .then((data) => {
+        if (!active) return;
+        setRostersByCode(data);
+        setRostersError(null);
+      })
+      .catch((err: unknown) => {
+        if (!active) return;
+        setRostersError(err instanceof Error ? err.message : "Ошибка при загрузке ростеров");
+      })
+      .finally(() => {
+        if (active) setRostersLoading(false);
       });
     return () => {
       active = false;
@@ -1500,6 +1524,9 @@ function App() {
   const selectedPodium = teamSummary
     ? podiumBase[teamSummary.team.id] ?? emptyPodium()
     : emptyPodium();
+  const selectedRoster = teamSummary
+    ? rostersByCode[teamSummary.team.flagCode] ?? null
+    : null;
   const medalsTotal = selectedPodium.gold + selectedPodium.silver + selectedPodium.bronze;
   const winGaugeColor =
     (teamSummary?.winPct ?? 0) > 50
@@ -1708,6 +1735,17 @@ function App() {
             </Text>
           )}
         </Box>
+
+        <TeamRosterPanel
+          roster={selectedRoster}
+          teamName={teamSummary?.team.name}
+          loading={rostersLoading}
+        />
+        {rostersError && (
+          <Text fontSize="sm" color="red.400">
+            {rostersError}
+          </Text>
+        )}
 
         <Box className="rating-shell">
           <Box className="rating-card-header">

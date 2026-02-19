@@ -38,3 +38,23 @@ export interface Group {
   teams: Team[];
   matches: Match[];
 }
+
+export interface RosterPlayer {
+  id: string;
+  name: string;
+  role: "forward" | "defenseman" | "goalie";
+  position: "F" | "D" | "G" | string;
+  club?: string;
+  overall?: number | null;
+  jersey_number?: number | null;
+  shoots?: string | null;
+  source?: string | null;
+}
+
+export interface TeamRoster {
+  code: string;
+  name: string;
+  forwards: RosterPlayer[];
+  defensemen: RosterPlayer[];
+  goalies: RosterPlayer[];
+}

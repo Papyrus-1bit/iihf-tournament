@@ -1,0 +1,182 @@
+{
+  "RU": {
+    "forwards": [
+      { "id": "RU-F1", "name": "Kirill Kaprizov", "club": "Minnesota Wild", "overall": 92 },
+      { "id": "RU-F2", "name": "Nikita Kucherov", "club": "Tampa Bay Lightning", "overall": 93 },
+      { "id": "RU-F3", "name": "Artemi Panarin", "club": "New York Rangers", "overall": 91 },
+      { "id": "RU-F4", "name": "Evgeny Kuznetsov", "club": "SKA", "overall": 86 },
+      { "id": "RU-F5", "name": "Andrei Svechnikov", "club": "Carolina Hurricanes", "overall": 88 },
+      { "id": "RU-F6", "name": "Matvei Michkov", "club": "Philadelphia Flyers", "overall": 86 }
+    ],
+    "defensemen": [
+      { "id": "RU-D1", "name": "Mikhail Sergachev", "club": "Utah Hockey Club", "overall": 88 },
+      { "id": "RU-D2", "name": "Dmitry Orlov", "club": "Carolina Hurricanes", "overall": 86 },
+      { "id": "RU-D3", "name": "Ivan Provorov", "club": "Columbus Blue Jackets", "overall": 85 },
+      { "id": "RU-D4", "name": "Nikita Zadorov", "club": "Boston Bruins", "overall": 84 }
+    ],
+    "goalies": [
+      { "id": "RU-G1", "name": "Igor Shesterkin", "club": "New York Rangers", "overall": 92 },
+      { "id": "RU-G2", "name": "Ilya Sorokin", "club": "New York Islanders", "overall": 90 }
+    ]
+  },
+  "US": {
+    "forwards": [
+      { "id": "US-F1", "name": "Auston Matthews", "club": "Toronto Maple Leafs", "overall": 94 },
+      { "id": "US-F2", "name": "Jack Eichel", "club": "Vegas Golden Knights", "overall": 92 },
+      { "id": "US-F3", "name": "Matthew Tkachuk", "club": "Florida Panthers", "overall": 92 },
+      { "id": "US-F4", "name": "Kyle Connor", "club": "Winnipeg Jets", "overall": 90 },
+      { "id": "US-F5", "name": "Clayton Keller", "club": "Utah Hockey Club", "overall": 88 },
+      { "id": "US-F6", "name": "Trevor Zegras", "club": "Anaheim Ducks", "overall": 86 }
+    ],
+    "defensemen": [
+      { "id": "US-D1", "name": "Adam Fox", "club": "New York Rangers", "overall": 91 },
+      { "id": "US-D2", "name": "Charlie McAvoy", "club": "Boston Bruins", "overall": 90 },
+      { "id": "US-D3", "name": "Quinn Hughes", "club": "Vancouver Canucks", "overall": 92 },
+      { "id": "US-D4", "name": "Noah Hanifin", "club": "Vegas Golden Knights", "overall": 86 }
+    ],
+    "goalies": [
+      { "id": "US-G1", "name": "Connor Hellebuyck", "club": "Winnipeg Jets", "overall": 93 },
+      { "id": "US-G2", "name": "Jeremy Swayman", "club": "Boston Bruins", "overall": 88 }
+    ]
+  },
+  "CA": {
+    "forwards": [
+      { "id": "CA-F1", "name": "Connor McDavid", "club": "Edmonton Oilers", "overall": 96 },
+      { "id": "CA-F2", "name": "Nathan MacKinnon", "club": "Colorado Avalanche", "overall": 95 },
+      { "id": "CA-F3", "name": "Sidney Crosby", "club": "Pittsburgh Penguins", "overall": 92 },
+      { "id": "CA-F4", "name": "Mitch Marner", "club": "Toronto Maple Leafs", "overall": 91 },
+      { "id": "CA-F5", "name": "Sam Reinhart", "club": "Florida Panthers", "overall": 90 },
+      { "id": "CA-F6", "name": "Connor Bedard", "club": "Chicago Blackhawks", "overall": 88 }
+    ],
+    "defensemen": [
+      { "id": "CA-D1", "name": "Cale Makar", "club": "Colorado Avalanche", "overall": 94 },
+      { "id": "CA-D2", "name": "Dougie Hamilton", "club": "New Jersey Devils", "overall": 88 },
+      { "id": "CA-D3", "name": "Devon Toews", "club": "Colorado Avalanche", "overall": 89 },
+      { "id": "CA-D4", "name": "Josh Morrissey", "club": "Winnipeg Jets", "overall": 88 }
+    ],
+    "goalies": [
+      { "id": "CA-G1", "name": "Jordan Binnington", "club": "St. Louis Blues", "overall": 86 },
+      { "id": "CA-G2", "name": "Adin Hill", "club": "Vegas Golden Knights", "overall": 87 }
+    ]
+  },
+  "SE": {
+    "forwards": [
+      { "id": "SE-F1", "name": "Mika Zibanejad", "club": "New York Rangers", "overall": 89 },
+      { "id": "SE-F2", "name": "William Nylander", "club": "Toronto Maple Leafs", "overall": 91 },
+      { "id": "SE-F3", "name": "Elias Pettersson", "club": "Vancouver Canucks", "overall": 90 },
+      { "id": "SE-F4", "name": "Lucas Raymond", "club": "Detroit Red Wings", "overall": 87 },
+      { "id": "SE-F5", "name": "Jesper Bratt", "club": "New Jersey Devils", "overall": 88 },
+      { "id": "SE-F6", "name": "Filip Forsberg", "club": "Nashville Predators", "overall": 89 }
+    ],
+    "defensemen": [
+      { "id": "SE-D1", "name": "Victor Hedman", "club": "Tampa Bay Lightning", "overall": 91 },
+      { "id": "SE-D2", "name": "Rasmus Dahlin", "club": "Buffalo Sabres", "overall": 90 },
+      { "id": "SE-D3", "name": "Erik Karlsson", "club": "Pittsburgh Penguins", "overall": 88 },
+      { "id": "SE-D4", "name": "Mattias Ekholm", "club": "Edmonton Oilers", "overall": 87 }
+    ],
+    "goalies": [
+      { "id": "SE-G1", "name": "Linus Ullmark", "club": "Ottawa Senators", "overall": 89 },
+      { "id": "SE-G2", "name": "Filip Gustavsson", "club": "Minnesota Wild", "overall": 85 }
+    ]
+  },
+  "FI": {
+    "forwards": [
+      { "id": "FI-F1", "name": "Sebastian Aho", "club": "Carolina Hurricanes", "overall": 90 },
+      { "id": "FI-F2", "name": "Mikko Rantanen", "club": "Colorado Avalanche", "overall": 92 },
+      { "id": "FI-F3", "name": "Aleksander Barkov", "club": "Florida Panthers", "overall": 92 },
+      { "id": "FI-F4", "name": "Roope Hintz", "club": "Dallas Stars", "overall": 88 },
+      { "id": "FI-F5", "name": "Teuvo Teravainen", "club": "Chicago Blackhawks", "overall": 85 },
+      { "id": "FI-F6", "name": "Kaapo Kakko", "club": "Seattle Kraken", "overall": 84 }
+    ],
+    "defensemen": [
+      { "id": "FI-D1", "name": "Miro Heiskanen", "club": "Dallas Stars", "overall": 91 },
+      { "id": "FI-D2", "name": "Esa Lindell", "club": "Dallas Stars", "overall": 86 },
+      { "id": "FI-D3", "name": "Rasmus Ristolainen", "club": "Philadelphia Flyers", "overall": 84 },
+      { "id": "FI-D4", "name": "Niko Mikkola", "club": "Florida Panthers", "overall": 83 }
+    ],
+    "goalies": [
+      { "id": "FI-G1", "name": "Juuse Saros", "club": "Nashville Predators", "overall": 90 },
+      { "id": "FI-G2", "name": "Ukko-Pekka Luukkonen", "club": "Buffalo Sabres", "overall": 85 }
+    ]
+  },
+  "CZ": {
+    "forwards": [
+      { "id": "CZ-F1", "name": "David Pastrnak", "club": "Boston Bruins", "overall": 93 },
+      { "id": "CZ-F2", "name": "Martin Necas", "club": "Colorado Avalanche", "overall": 88 },
+      { "id": "CZ-F3", "name": "Pavel Zacha", "club": "Boston Bruins", "overall": 86 },
+      { "id": "CZ-F4", "name": "Tomas Hertl", "club": "Vegas Golden Knights", "overall": 87 },
+      { "id": "CZ-F5", "name": "Filip Chytil", "club": "Vancouver Canucks", "overall": 84 },
+      { "id": "CZ-F6", "name": "Dominik Kubalik", "club": "Ambri-Piotta", "overall": 82 }
+    ],
+    "defensemen": [
+      { "id": "CZ-D1", "name": "Filip Hronek", "club": "Vancouver Canucks", "overall": 87 },
+      { "id": "CZ-D2", "name": "Radko Gudas", "club": "Anaheim Ducks", "overall": 84 },
+      { "id": "CZ-D3", "name": "Jan Rutta", "club": "San Jose Sharks", "overall": 82 },
+      { "id": "CZ-D4", "name": "David Spacek", "club": "Iowa Wild", "overall": 79 }
+    ],
+    "goalies": [
+      { "id": "CZ-G1", "name": "Petr Mrazek", "club": "Detroit Red Wings", "overall": 84 },
+      { "id": "CZ-G2", "name": "Karel Vejmelka", "club": "Utah Hockey Club", "overall": 85 }
+    ]
+  },
+  "DE": {
+    "forwards": [
+      { "id": "DE-F1", "name": "Leon Draisaitl", "club": "Edmonton Oilers", "overall": 94 },
+      { "id": "DE-F2", "name": "Tim Stutzle", "club": "Ottawa Senators", "overall": 89 },
+      { "id": "DE-F3", "name": "JJ Peterka", "club": "Buffalo Sabres", "overall": 85 },
+      { "id": "DE-F4", "name": "Lukas Reichel", "club": "Chicago Blackhawks", "overall": 82 },
+      { "id": "DE-F5", "name": "Nico Sturm", "club": "San Jose Sharks", "overall": 81 },
+      { "id": "DE-F6", "name": "Marcel Noebels", "club": "Eisbaeren Berlin", "overall": 79 }
+    ],
+    "defensemen": [
+      { "id": "DE-D1", "name": "Moritz Seider", "club": "Detroit Red Wings", "overall": 90 },
+      { "id": "DE-D2", "name": "Dennis Seidenberg", "club": "Retired", "overall": 75 },
+      { "id": "DE-D3", "name": "Jonas Muller", "club": "Eisbaeren Berlin", "overall": 78 },
+      { "id": "DE-D4", "name": "Kai Wissmann", "club": "Eisb. Berlin", "overall": 78 }
+    ],
+    "goalies": [
+      { "id": "DE-G1", "name": "Philipp Grubauer", "club": "Seattle Kraken", "overall": 85 },
+      { "id": "DE-G2", "name": "Mathias Niederberger", "club": "EHC Red Bull Munich", "overall": 80 }
+    ]
+  },
+  "CH": {
+    "forwards": [
+      { "id": "CH-F1", "name": "Nico Hischier", "club": "New Jersey Devils", "overall": 89 },
+      { "id": "CH-F2", "name": "Timo Meier", "club": "New Jersey Devils", "overall": 88 },
+      { "id": "CH-F3", "name": "Kevin Fiala", "club": "Los Angeles Kings", "overall": 90 },
+      { "id": "CH-F4", "name": "Nino Niederreiter", "club": "Winnipeg Jets", "overall": 86 },
+      { "id": "CH-F5", "name": "Pius Suter", "club": "Vancouver Canucks", "overall": 84 },
+      { "id": "CH-F6", "name": "Denis Malgin", "club": "ZSC Lions", "overall": 80 }
+    ],
+    "defensemen": [
+      { "id": "CH-D1", "name": "Roman Josi", "club": "Nashville Predators", "overall": 91 },
+      { "id": "CH-D2", "name": "Jonas Siegenthaler", "club": "New Jersey Devils", "overall": 85 },
+      { "id": "CH-D3", "name": "Janis Moser", "club": "Tampa Bay Lightning", "overall": 83 },
+      { "id": "CH-D4", "name": "Dean Kukan", "club": "ZSC Lions", "overall": 79 }
+    ],
+    "goalies": [
+      { "id": "CH-G1", "name": "Akira Schmid", "club": "Vegas Golden Knights", "overall": 84 },
+      { "id": "CH-G2", "name": "Reto Berra", "club": "Fribourg-Gotteron", "overall": 79 }
+    ]
+  },
+  "SK": {
+    "forwards": [
+      { "id": "SK-F1", "name": "Juraj Slafkovsky", "club": "Montreal Canadiens", "overall": 87 },
+      { "id": "SK-F2", "name": "Tomas Tatar", "club": "New Jersey Devils", "overall": 83 },
+      { "id": "SK-F3", "name": "Martin Pospisil", "club": "Calgary Flames", "overall": 82 },
+      { "id": "SK-F4", "name": "Pavol Regenda", "club": "San Jose Barracuda", "overall": 79 },
+      { "id": "SK-F5", "name": "Milos Kelemen", "club": "Utah HC", "overall": 78 },
+      { "id": "SK-F6", "name": "Adam Liska", "club": "Severstal Cherepovets", "overall": 77 }
+    ],
+    "defensemen": [
+      { "id": "SK-D1", "name": "Erik Cernak", "club": "Tampa Bay Lightning", "overall": 86 },
+      { "id": "SK-D2", "name": "Martin Fehervary", "club": "Washington Capitals", "overall": 85 },
+      { "id": "SK-D3", "name": "Simon Nemec", "club": "New Jersey Devils", "overall": 84 },
+      { "id": "SK-D4", "name": "Patrik Koch", "club": "HC Ocelari Trinec", "overall": 77 }
+    ],
+    "goalies": [
+      { "id": "SK-G1", "name": "Samuel Hlavaj", "club": "Iowa Wild", "overall": 80 },
+      { "id": "SK-G2", "name": "Adam Gajan", "club": "University of Minnesota Duluth", "overall": 78 }
+    ]
+  }
+}

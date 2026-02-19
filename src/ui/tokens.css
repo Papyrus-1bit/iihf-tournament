@@ -904,6 +904,74 @@
   margin-top: 8px;
 }
 
+.roster-panel {
+  background: rgba(8, 10, 14, 0.92);
+  box-shadow: none;
+}
+
+.roster-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.roster-team-name {
+  font-family: "Barlow Condensed", "Barlow", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.roster-group {
+  min-width: 0;
+}
+
+.roster-group-title {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-muted);
+  margin-bottom: 8px;
+}
+
+.roster-list {
+  display: grid;
+  gap: 6px;
+}
+
+.roster-item {
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(245, 245, 247, 0.2);
+}
+
+.roster-item-name {
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.roster-item-meta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--ui-muted);
+  line-height: 1.2;
+}
+
+.roster-empty {
+  font-size: 12px;
+  color: var(--ui-muted);
+}
+
 .hero-floating-nav {
   position: fixed;
   bottom: max(16px, env(safe-area-inset-bottom));
@@ -1834,5 +1902,9 @@
 
   .win-rate-gauge__inner strong {
     font-size: 10px;
+  }
+
+  .roster-grid {
+    grid-template-columns: 1fr;
   }
 }

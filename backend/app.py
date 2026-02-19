@@ -31,6 +31,7 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COUNTRIES_FILE = os.path.join(BASE_DIR, "countries.json")
+ROSTERS_FILE = os.path.join(BASE_DIR, "rosters.json")
 # Load backend/.env automatically (if present).
 load_dotenv(os.path.join(BASE_DIR, ".env"), override=False)
 DATABASE_URL = os.getenv(
@@ -134,6 +135,30 @@ class TournamentSave(Base):
     )
 
 
+class RosterPlayer(Base):
+    __tablename__ = "roster_players"
+    __table_args__ = (
+        UniqueConstraint("country_code", "external_id", name="uq_roster_country_external"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    country_code = Column(String(8), ForeignKey("countries.code"), nullable=False, index=True)
+    external_id = Column(String(64), nullable=False)
+    full_name = Column(String(120), nullable=False)
+    role = Column(String(16), nullable=False)  # forward / defenseman / goalie
+    position = Column(String(4), nullable=False)  # F / D / G
+    club = Column(String(120), nullable=True)
+    overall = Column(Integer, nullable=True)
+    jersey_number = Column(Integer, nullable=True)
+    shoots = Column(String(8), nullable=True)
+    source = Column(String(80), nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, future=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 
@@ -207,6 +232,93 @@ def load_countries_file() -> dict[str, Any]:
         return json.load(f)
 
 
+def load_rosters_file() -> dict[str, Any]:
+    if not os.path.exists(ROSTERS_FILE):
+        return {}
+    with open(ROSTERS_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def build_fallback_roster(country_code: str, country_name: str) -> dict[str, list[dict[str, Any]]]:
+    def make_players(prefix: str, count: int, role: str, position: str) -> list[dict[str, Any]]:
+        return [
+            {
+                "id": f"{country_code}-{prefix}{idx + 1}",
+                "name": f"{country_name} {prefix}{idx + 1}",
+                "club": "",
+                "overall": None,
+                "position": position,
+                "role": role,
+            }
+            for idx in range(count)
+        ]
+
+    return {
+        "forwards": make_players("F", 12, "forward", "F"),
+        "defensemen": make_players("D", 8, "defenseman", "D"),
+        "goalies": make_players("G", 3, "goalie", "G"),
+    }
+
+
+def normalize_roster_payload(
+    country_code: str, country_name: str, payload: dict[str, Any] | None
+) -> dict[str, list[dict[str, Any]]]:
+    normalized = payload or {}
+    fallback = build_fallback_roster(country_code, country_name)
+    role_specs = (
+        ("forwards", "forward", "F"),
+        ("defensemen", "defenseman", "D"),
+        ("goalies", "goalie", "G"),
+    )
+    result: dict[str, list[dict[str, Any]]] = {}
+
+    for role_key, role_value, position_value in role_specs:
+        raw_players = normalized.get(role_key)
+        if not isinstance(raw_players, list) or len(raw_players) == 0:
+            result[role_key] = fallback[role_key]
+            continue
+
+        players: list[dict[str, Any]] = []
+        for idx, item in enumerate(raw_players):
+            if isinstance(item, str):
+                players.append(
+                    {
+                        "id": f"{country_code}-{position_value}{idx + 1}",
+                        "name": item.strip() or f"{country_name} {position_value}{idx + 1}",
+                        "club": "",
+                        "overall": None,
+                        "position": position_value,
+                        "role": role_value,
+                    }
+                )
+                continue
+
+            if not isinstance(item, dict):
+                continue
+
+            player_name = str(item.get("name", "")).strip()
+            if not player_name:
+                player_name = f"{country_name} {position_value}{idx + 1}"
+            player_id = str(item.get("id") or f"{country_code}-{position_value}{idx + 1}").strip()
+            players.append(
+                {
+                    "id": player_id,
+                    "name": player_name,
+                    "club": str(item.get("club", "")).strip(),
+                    "overall": item.get("overall"),
+                    "position": str(item.get("position") or position_value).upper(),
+                    "role": role_value,
+                    "jersey_number": item.get("jersey_number"),
+                    "shoots": item.get("shoots"),
+                    "source": item.get("source"),
+                }
+            )
+
+        result[role_key] = players if players else fallback[role_key]
+
+    return result
+
+
 def ensure_countries_seeded(db: Session) -> None:
     data = load_countries_file()
     existing = {c.code: c for c in db.scalars(select(Country)).all()}
@@ -248,6 +360,95 @@ def ensure_countries_seeded(db: Session) -> None:
         db.commit()
 
 
+def ensure_rosters_seeded(db: Session) -> None:
+    raw_rosters = load_rosters_file()
+    countries = db.scalars(select(Country)).all()
+    existing = {
+        (player.country_code, player.external_id): player
+        for player in db.scalars(select(RosterPlayer)).all()
+    }
+    changed = False
+
+    for country in countries:
+        normalized = normalize_roster_payload(
+            country.code, country.name, raw_rosters.get(country.code)
+        )
+        for role_key in ("forwards", "defensemen", "goalies"):
+            for player_data in normalized[role_key]:
+                external_id = str(player_data["id"])
+                key = (country.code, external_id)
+                row = existing.get(key)
+
+                overall_raw = player_data.get("overall")
+                overall_value = (
+                    int(overall_raw) if isinstance(overall_raw, (int, float)) else None
+                )
+                jersey_raw = player_data.get("jersey_number")
+                jersey_value = (
+                    int(jersey_raw) if isinstance(jersey_raw, (int, float)) else None
+                )
+                shoots_raw = player_data.get("shoots")
+                shoots_value = (
+                    str(shoots_raw).strip().upper() if isinstance(shoots_raw, str) else None
+                )
+                source_raw = player_data.get("source")
+                source_value = str(source_raw).strip() if isinstance(source_raw, str) else None
+
+                if not row:
+                    db.add(
+                        RosterPlayer(
+                            country_code=country.code,
+                            external_id=external_id,
+                            full_name=str(player_data.get("name", "")).strip(),
+                            role=str(player_data.get("role", "")).strip() or "forward",
+                            position=str(player_data.get("position", "")).strip() or "F",
+                            club=str(player_data.get("club", "")).strip(),
+                            overall=overall_value,
+                            jersey_number=jersey_value,
+                            shoots=shoots_value,
+                            source=source_value,
+                            is_active=True,
+                        )
+                    )
+                    changed = True
+                    continue
+
+                next_name = str(player_data.get("name", "")).strip()
+                next_role = str(player_data.get("role", "")).strip() or row.role
+                next_position = str(player_data.get("position", "")).strip() or row.position
+                next_club = str(player_data.get("club", "")).strip()
+                if row.full_name != next_name:
+                    row.full_name = next_name
+                    changed = True
+                if row.role != next_role:
+                    row.role = next_role
+                    changed = True
+                if row.position != next_position:
+                    row.position = next_position
+                    changed = True
+                if row.club != next_club:
+                    row.club = next_club
+                    changed = True
+                if row.overall != overall_value:
+                    row.overall = overall_value
+                    changed = True
+                if row.jersey_number != jersey_value:
+                    row.jersey_number = jersey_value
+                    changed = True
+                if row.shoots != shoots_value:
+                    row.shoots = shoots_value
+                    changed = True
+                if row.source != source_value:
+                    row.source = source_value
+                    changed = True
+                if not row.is_active:
+                    row.is_active = True
+                    changed = True
+
+    if changed:
+        db.commit()
+
+
 def serialize_country(country: Country) -> dict[str, Any]:
     return {
         "name": country.name,
@@ -259,6 +460,40 @@ def serialize_country(country: Country) -> dict[str, Any]:
             "bronze": country.podium_bronze,
             "finals": country.podium_finals,
         },
+    }
+
+
+def serialize_roster_player(player: RosterPlayer) -> dict[str, Any]:
+    return {
+        "id": player.external_id,
+        "name": player.full_name,
+        "role": player.role,
+        "position": player.position,
+        "club": player.club,
+        "overall": player.overall,
+        "jersey_number": player.jersey_number,
+        "shoots": player.shoots,
+        "source": player.source,
+    }
+
+
+def get_country_roster(db: Session, code: str) -> dict[str, Any]:
+    country = db.get(Country, code.upper())
+    if not country:
+        raise HTTPException(status_code=404, detail="Country not found")
+
+    players = db.scalars(
+        select(RosterPlayer)
+        .where(RosterPlayer.country_code == country.code, RosterPlayer.is_active.is_(True))
+        .order_by(RosterPlayer.role.asc(), RosterPlayer.full_name.asc())
+    ).all()
+
+    return {
+        "code": country.code,
+        "name": country.name,
+        "forwards": [serialize_roster_player(p) for p in players if p.role == "forward"],
+        "defensemen": [serialize_roster_player(p) for p in players if p.role == "defenseman"],
+        "goalies": [serialize_roster_player(p) for p in players if p.role == "goalie"],
     }
 
 
@@ -430,6 +665,7 @@ def on_startup() -> None:
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
         ensure_countries_seeded(db)
+        ensure_rosters_seeded(db)
 
 
 # ===== Endpoints =====
@@ -441,8 +677,24 @@ def health() -> dict[str, str]:
 @app.get("/countries")
 def get_countries(db: Session = Depends(get_db)) -> dict[str, Any]:
     ensure_countries_seeded(db)
+    ensure_rosters_seeded(db)
     rows = db.scalars(select(Country).order_by(Country.rating_points.desc())).all()
     return {row.code: serialize_country(row) for row in rows}
+
+
+@app.get("/rosters")
+def get_rosters(db: Session = Depends(get_db)) -> dict[str, Any]:
+    ensure_countries_seeded(db)
+    ensure_rosters_seeded(db)
+    countries = db.scalars(select(Country).order_by(Country.rating_points.desc())).all()
+    return {country.code: get_country_roster(db, country.code) for country in countries}
+
+
+@app.get("/rosters/{code}")
+def get_roster_by_code(code: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    ensure_countries_seeded(db)
+    ensure_rosters_seeded(db)
+    return get_country_roster(db, code)
 
 
 @app.patch("/countries/{code}")
