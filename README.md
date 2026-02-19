@@ -3,12 +3,12 @@
 A local, single-page simulator for an IIHF-style tournament. The app supports group setup, drag-and-drop team assignment, a day-by-day calendar, playoffs, standings, and rating updates. It also stores saves locally and supports JSON export/import.
 
 ## Features
-- Group setup with sliders and manual drag-and-drop placement
+- Group setup with discrete options (2/4/6/8/12/16) and manual drag-and-drop placement
 - Auto-distribution by strength with a per-group team limit
 - Calendar-based schedule with day locking and quick simulation
 - Manual score input, OT/SO handling, and result markers
 - Playoffs (R16, QF, SF, Final, 3rd place) with seeding rules
-- Standings tab with overall or per-group view
+- Standings with overall or per-group view
 - Rating table with OVR and rating delta indicators
 - Auto-save of the current tournament state (restored on reload)
 - Final tournament screen with podium and rating change summary
@@ -28,6 +28,7 @@ A local, single-page simulator for an IIHF-style tournament. The app supports gr
 - `src/standings.ts` - standings and points logic
 - `backend/` - FastAPI app and country data
 - `public/svg/` - flag assets (SVG)
+- `public/federations/` - federation crests/logos (PNG)
 
 ## Data Files
 - `backend/countries.json` stores team name, rating_points, ovr, and historical podiums for the top 32 national teams.
@@ -57,32 +58,15 @@ npm run dev
 Optional env:
 - `VITE_API_BASE` (default: `http://localhost:8000`)
 
-## UI Tests (pytest + Selenium)
-```
-cd iihf-tournament
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -r tests/requirements.txt
-```
-
-Run tests (frontend must be running on `http://localhost:5173`):
-```
-npm run dev
-# in another terminal
-npm run test:ui
-```
-
-If Chrome/Chromium is installed, Selenium Manager will auto-resolve WebDriver.
-
 ## Usage
-1. Open the `Tournament` tab and set group parameters.
-2. Drag teams into groups, or use auto-distribution.
-3. Click team cards to mark player teams.
-4. Choose playoff seeding and bracket rules.
+1. Click `Создать турнир`.
+2. Choose group stage parameters and playoff rules in modal.
+3. Drag teams into groups, or use auto-distribution.
+4. Click team cards to mark player teams.
 5. Create the tournament to generate schedule.
 6. Use the calendar to play/simulate matches day-by-day (auto-advance to next day on sim).
-7. Check standings and playoff tabs for progress.
-8. Ratings update after tournament completion. Use reset to restore defaults.
+7. Check standings and playoff bracket for progress.
+8. Ratings update after tournament completion. Use reset or rebuild from saves.
 
 ## Saves
 - Save stores the current tournament snapshot in localStorage.
