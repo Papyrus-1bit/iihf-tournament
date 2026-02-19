@@ -18,7 +18,7 @@ A local, single-page simulator for an IIHF-style tournament. The app supports gr
 ## Tech Stack
 - React 18 + Vite + TypeScript
 - Chakra UI (current UI library)
-- FastAPI backend for country data
+- FastAPI backend + PostgreSQL
 
 ## Project Structure
 - `src/` - frontend source
@@ -27,6 +27,8 @@ A local, single-page simulator for an IIHF-style tournament. The app supports gr
 - `src/simulation.ts` - match simulation logic
 - `src/standings.ts` - standings and points logic
 - `backend/` - FastAPI app and country data
+- `backend/requirements.txt` - backend dependencies
+- `docker-compose.yml` - local PostgreSQL service
 - `public/svg/` - flag assets (SVG)
 - `public/federations/` - federation crests/logos (PNG)
 
@@ -41,12 +43,18 @@ A local, single-page simulator for an IIHF-style tournament. The app supports gr
 
 ### Backend
 ```
+docker compose up -d postgres
+
 cd backend
 python -m venv .venv
 source .venv/bin/activate
-pip install fastapi uvicorn numpy
+cp .env.example .env
+pip install -r requirements.txt
 uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
+
+Backend env:
+- `DATABASE_URL` (default: `postgresql+psycopg://iihf:iihf@localhost:5432/iihf`)
 
 ### Frontend
 ```
@@ -57,6 +65,22 @@ npm run dev
 
 Optional env:
 - `VITE_API_BASE` (default: `http://localhost:8000`)
+
+## Backend Data Model (PostgreSQL)
+Stored entities:
+- `countries` - country master data, rating, OVR, medals
+- `tournaments` - tournament metadata + groups/standings snapshot
+- `matches` - all matches for each tournament
+- `tournament_saves` - arbitrary saved tournament payloads
+
+Useful API endpoints:
+- `GET /countries`
+- `POST /tournament/create`
+- `GET /tournaments`
+- `GET /tournaments/{id}`
+- `POST /saves`
+- `GET /saves`
+- `POST /tournaments/{id}/commit-ratings`
 
 ## Usage
 1. Click `Создать турнир`.

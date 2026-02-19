@@ -1,0 +1,6 @@
+fastapi==0.115.13
+uvicorn[standard]==0.34.0
+numpy==2.2.2
+SQLAlchemy==2.0.38
+psycopg[binary]==3.2.13
+alembic==1.14.1

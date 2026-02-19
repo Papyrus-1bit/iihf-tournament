@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: iihf-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: iihf
+      POSTGRES_USER: iihf
+      POSTGRES_PASSWORD: iihf
+    ports:
+      - "5432:5432"
+    volumes:
+      - iihf_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U iihf -d iihf"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  iihf_pgdata:
