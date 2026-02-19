@@ -93,7 +93,30 @@ const Calendar: React.FC<Props> = ({
     return null;
   }, [allMatches]);
 
-  const handleSimulateDay = (date: string, pool?: Match[]) => {
+  useEffect(() => {
+    if (!activeDate) return;
+    requestAnimationFrame(() => {
+      const el = scrollRef.current?.querySelector(
+        `[data-date="${activeDate}"]`
+      ) as HTMLElement | null;
+      el?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    });
+  }, [activeDate, orderedDates]);
+
+  const focusNextDate = (date: string) => {
+    const index = orderedDates.indexOf(date);
+    if (index === -1) return;
+    const nextDate = orderedDates[index + 1];
+    if (!nextDate) return;
+    requestAnimationFrame(() => {
+      const el = scrollRef.current?.querySelector(
+        `[data-date="${nextDate}"]`
+      ) as HTMLElement | null;
+      el?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    });
+  };
+
+  const handleSimulateDay = (date: string, pool?: Match[], advanceFocus = false) => {
     const matches = pool ?? matchesByDate.get(date) ?? [];
     matches.forEach((match) => {
       if (match.homeScore !== undefined && match.awayScore !== undefined) return;
@@ -101,7 +124,11 @@ const Calendar: React.FC<Props> = ({
         hasSelection &&
         (playerTeamIds.includes(match.home.id) || playerTeamIds.includes(match.away.id));
       if (isPlayerMatch) return;
-      const result = simulateMatchResult(match.home, match.away);
+      const result = simulateMatchResult(match.home, match.away, {
+        historyMatches: allMatches,
+        currentMatchId: match.id,
+        stage: match.stage,
+      });
       onUpdateMatch(match.id, {
         homeScore: result.homeGoals,
         awayScore: result.awayGoals,
@@ -109,6 +136,9 @@ const Calendar: React.FC<Props> = ({
         shootout: result.shootout,
       });
     });
+    if (advanceFocus) {
+      focusNextDate(date);
+    }
   };
 
   if (orderedDates.length === 0) {
@@ -188,6 +218,7 @@ const Calendar: React.FC<Props> = ({
               scrollSnapAlign="start"
               className="calendar-day"
               data-upcoming={isUpcoming}
+              data-date={date}
             >
               <Box className="calendar-day-header">
                 <Box>
@@ -197,7 +228,10 @@ const Calendar: React.FC<Props> = ({
                   </Text>
                 </Box>
                 {allowSimulateDay && (
-                  <IconButton onClick={() => handleSimulateDay(date)} aria-label="Симулировать день">
+                  <IconButton
+                    onClick={() => handleSimulateDay(date, matches, true)}
+                    aria-label="Симулировать день"
+                  >
                     <FiPlay />
                   </IconButton>
                 )}
@@ -213,6 +247,7 @@ const Calendar: React.FC<Props> = ({
                   onUpdate={(updates) => onUpdateMatch(match.id, updates)}
                   isLocked={activeDate !== null && match.date > activeDate}
                   playerTeamIds={playerTeamIds}
+                  historyMatches={allMatches}
                   useShortNames
                   featured={index === 0}
                   compact={hasSelection && viewMode === "all" && !isSelectedMatch}
@@ -258,6 +293,7 @@ const Calendar: React.FC<Props> = ({
                           onUpdate={(updates) => onUpdateMatch(match.id, updates)}
                           isLocked={activeDate !== null && match.date > activeDate}
                           playerTeamIds={playerTeamIds}
+                          historyMatches={allMatches}
                           useShortNames
                           compact
                         />

@@ -9,6 +9,8 @@ interface Props {
   embedded?: boolean;
 }
 
+const DISCRETE_VALUES = [2, 4, 6, 8, 12, 16];
+
 const TournamentSetup: FC<Props> = ({ teams, onCreate, embedded = false }) => {
   const [numGroups, setNumGroups] = useState(2);
   const [teamsPerGroup, setTeamsPerGroup] = useState(4);
@@ -17,12 +19,33 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate, embedded = false }) => {
     () => Math.min(16, Math.max(2, teams.length)),
     [teams.length]
   );
+  const maxGroups = useMemo(() => Math.min(16, Math.max(2, teams.length)), [teams.length]);
+  const groupOptions = useMemo(
+    () => DISCRETE_VALUES.filter((value) => value <= maxGroups),
+    [maxGroups]
+  );
+  const teamsPerGroupOptions = useMemo(
+    () => DISCRETE_VALUES.filter((value) => value <= maxTeamsPerGroup),
+    [maxTeamsPerGroup]
+  );
 
   useEffect(() => {
     if (teamsPerGroup > maxTeamsPerGroup) {
       setTeamsPerGroup(maxTeamsPerGroup);
     }
   }, [teamsPerGroup, maxTeamsPerGroup]);
+
+  useEffect(() => {
+    if (!groupOptions.includes(numGroups)) {
+      setNumGroups(groupOptions[0] ?? 2);
+    }
+  }, [groupOptions, numGroups]);
+
+  useEffect(() => {
+    if (!teamsPerGroupOptions.includes(teamsPerGroup)) {
+      setTeamsPerGroup(teamsPerGroupOptions[0] ?? 2);
+    }
+  }, [teamsPerGroupOptions, teamsPerGroup]);
 
   const handleCreate = () => {
     if (teams.length === 0 || numGroups <= 0) return;
@@ -74,41 +97,47 @@ const TournamentSetup: FC<Props> = ({ teams, onCreate, embedded = false }) => {
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
             <Text fontSize="sm" color="gray.500">Количество групп</Text>
           </Box>
-          <input
-            type="number"
-            min={1}
-            max={8}
-            step={1}
-            value={numGroups}
-            onChange={(e) => {
-              const next = Number(e.target.value);
-              if (!Number.isFinite(next)) return;
-              setNumGroups(Math.min(8, Math.max(1, Math.round(next))));
-            }}
-            className="ui-input"
-            style={{ width: "100%" }}
-          />
+          <Box className="setup-radio-group">
+            {groupOptions.map((value) => (
+              <label
+                key={`groups-${value}`}
+                className="setup-radio-option"
+                data-active={numGroups === value}
+              >
+                <input
+                  type="radio"
+                  name="num-groups"
+                  value={value}
+                  checked={numGroups === value}
+                  onChange={() => setNumGroups(value)}
+                />
+                <span>{value}</span>
+              </label>
+            ))}
+          </Box>
         </Box>
         <Box flex="1" minW="220px">
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
             <Text fontSize="sm" color="gray.500">Команд в группе</Text>
           </Box>
-          <input
-            type="number"
-            min={2}
-            max={maxTeamsPerGroup}
-            step={1}
-            value={teamsPerGroup}
-            onChange={(e) => {
-              const next = Number(e.target.value);
-              if (!Number.isFinite(next)) return;
-              setTeamsPerGroup(
-                Math.min(maxTeamsPerGroup, Math.max(2, Math.round(next)))
-              );
-            }}
-            className="ui-input"
-            style={{ width: "100%" }}
-          />
+          <Box className="setup-radio-group">
+            {teamsPerGroupOptions.map((value) => (
+              <label
+                key={`teams-${value}`}
+                className="setup-radio-option"
+                data-active={teamsPerGroup === value}
+              >
+                <input
+                  type="radio"
+                  name="teams-per-group"
+                  value={value}
+                  checked={teamsPerGroup === value}
+                  onChange={() => setTeamsPerGroup(value)}
+                />
+                <span>{value}</span>
+              </label>
+            ))}
+          </Box>
         </Box>
       </Box>
     </>

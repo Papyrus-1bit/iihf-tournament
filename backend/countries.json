@@ -251,5 +251,104 @@
       "bronze": 0,
       "finals": 0
     }
+  },
+  "LT": {
+    "name": "Литва",
+    "rating_points": 2795,
+    "ovr": 69,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
+  },
+  "KR": {
+    "name": "Южная Корея",
+    "rating_points": 2760,
+    "ovr": 68,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
+  },
+  "EE": {
+    "name": "Эстония",
+    "rating_points": 2730,
+    "ovr": 68,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
+  },
+  "NL": {
+    "name": "Нидерланды",
+    "rating_points": 2705,
+    "ovr": 67,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
+  },
+  "RO": {
+    "name": "Румыния",
+    "rating_points": 2680,
+    "ovr": 67,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
+  },
+  "CN": {
+    "name": "Китай",
+    "rating_points": 2655,
+    "ovr": 66,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
+  },
+  "RS": {
+    "name": "Сербия",
+    "rating_points": 2620,
+    "ovr": 65,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
+  },
+  "HR": {
+    "name": "Хорватия",
+    "rating_points": 2590,
+    "ovr": 65,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
+  },
+  "ES": {
+    "name": "Испания",
+    "rating_points": 2560,
+    "ovr": 64,
+    "podiums": {
+      "gold": 0,
+      "silver": 0,
+      "bronze": 0,
+      "finals": 0
+    }
   }
 }

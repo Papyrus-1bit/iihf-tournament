@@ -55,7 +55,10 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
                 className="table-row"
               >
                 <Box flex={3} display="flex" alignItems="center" gap={2}>
-                  <Flag code={t.flagCode} name={t.teamName} /> {t.teamName}
+                  <span className="table-flag">
+                    <Flag code={t.flagCode} name={t.teamName} size={18} />
+                  </span>
+                  <Text>{t.teamName}</Text>
                 </Box>
                 <Box flex={1} textAlign="center">{t.played}</Box>
                 <Box flex={1} textAlign="center">{t.won}</Box>
@@ -93,7 +96,10 @@ const StandingsTable: FC<Props> = ({ groups, playerTeamIds = [] }) => {
                 className="table-row"
               >
                 <Box flex={3} display="flex" alignItems="center" gap={2}>
-                  <Flag code={t.flagCode} name={t.teamName} /> {t.teamName}
+                  <span className="table-flag">
+                    <Flag code={t.flagCode} name={t.teamName} size={18} />
+                  </span>
+                  <Text>{t.teamName}</Text>
                 </Box>
                 <Box flex={1} textAlign="center">{t.played}</Box>
                 <Box flex={1} textAlign="center">{t.won}</Box>

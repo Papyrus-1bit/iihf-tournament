@@ -22,13 +22,32 @@ const UiRoot: FC<PropsWithChildren<Props>> = ({ children, className }) => {
     ];
     let rafId = 0;
     let last = performance.now();
+    let lastUpdate = last;
+    const updateInterval = 120;
+    let paused = document.hidden;
+
+    const handleVisibility = () => {
+      paused = document.hidden;
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
 
     const clamp = (value: number, min: number, max: number) =>
       Math.max(min, Math.min(max, value));
 
     const tick = (now: number) => {
+      if (paused) {
+        last = now;
+        lastUpdate = now;
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+      if (now - lastUpdate < updateInterval) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
       const dt = Math.min((now - last) / 16, 2);
       last = now;
+      lastUpdate = now;
       blobs.forEach((blob) => {
         if (Math.random() < 0.02) {
           blob.vx += (Math.random() - 0.5) * 0.08;
@@ -55,7 +74,10 @@ const UiRoot: FC<PropsWithChildren<Props>> = ({ children, className }) => {
     };
 
     rafId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   return (

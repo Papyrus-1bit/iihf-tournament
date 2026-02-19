@@ -9,20 +9,34 @@ interface Props {
 const Flag: FC<Props> = ({ code, name, size = 24 }) => {
   const src = `/svg/${code.toLowerCase()}.svg`;
   const height = size;
+  const width = Math.round(size * 1.5);
   return (
-    <img
-      src={src}
-      alt={name}
-      height={height}
+    <span
       style={{
-        width: "auto",
+        display: "inline-flex",
+        width,
         height,
-        objectFit: "contain",
+        overflow: "hidden",
         borderRadius: "2px",
         verticalAlign: "middle",
+        flex: "0 0 auto",
       }}
-      loading="lazy"
-    />
+    >
+      <img
+        src={src}
+        alt={name}
+        width={width}
+        height={height}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: "center",
+          display: "block",
+        }}
+        loading="lazy"
+      />
+    </span>
   );
 };
 

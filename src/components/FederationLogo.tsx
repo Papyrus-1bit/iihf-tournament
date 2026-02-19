@@ -7,32 +7,64 @@ interface Props {
   size?: number;
 }
 
+const EXTENSIONS = ["png", "svg", "webp", "jpg", "jpeg"] as const;
+
+const LOGO_NAME_OVERRIDES: Record<string, string[]> = {
+  AT: ["austria"],
+  CH: ["swiss"],
+  FI: ["fn"],
+  GB: ["great britain"],
+  RU: ["russia"],
+  SI: ["slovenia"],
+};
+
+const buildSources = (code: string) => {
+  const upper = code.trim().toUpperCase();
+  const lower = upper.toLowerCase();
+  const names = [...(LOGO_NAME_OVERRIDES[upper] ?? []), lower];
+
+  const sources: string[] = [];
+  names.forEach((name) => {
+    const encodedName = encodeURIComponent(name);
+    EXTENSIONS.forEach((ext) => {
+      sources.push(`/federations/${encodedName}.${ext}`);
+    });
+  });
+
+  return sources;
+};
+
 const FederationLogo: FC<Props> = ({ code, name, size = 28 }) => {
-  const primarySrc = useMemo(() => `/federations/${code.toLowerCase()}.svg`, [code]);
-  const fallbackSrc = useMemo(() => `/svg/${code.toLowerCase()}.svg`, [code]);
-  const [src, setSrc] = useState(primarySrc);
+  const sources = useMemo(() => buildSources(code), [code]);
+  const [sourceIndex, setSourceIndex] = useState(0);
 
   useEffect(() => {
-    setSrc(primarySrc);
-  }, [primarySrc]);
+    setSourceIndex(0);
+  }, [sources]);
+
+  const src = sources[sourceIndex];
+
   return (
-    <img
-      src={src}
-      alt={name}
-      width={size}
-      height={size}
-      onError={(e) => {
-        if (src === fallbackSrc) return;
-        setSrc(fallbackSrc);
-      }}
-      style={{
-        objectFit: "contain",
-        borderRadius: "6px",
-        background: "rgba(255, 255, 255, 0.04)",
-        padding: "2px",
-      }}
-      loading="lazy"
-    />
+    <span
+      className={`federation-logo${src ? "" : " federation-logo--placeholder"}`}
+      style={{ width: size, height: size }}
+      aria-label={name}
+      title={name}
+    >
+      {src ? (
+        <img
+          src={src}
+          alt={name}
+          width={size}
+          height={size}
+          onError={() => setSourceIndex((prev) => prev + 1)}
+          className="federation-logo__img"
+          loading="lazy"
+        />
+      ) : (
+        <span className="federation-logo__placeholder">{code.toUpperCase()}</span>
+      )}
+    </span>
   );
 };
 

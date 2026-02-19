@@ -3,13 +3,15 @@
 A local, single-page simulator for an IIHF-style tournament. The app supports group setup, drag-and-drop team assignment, a day-by-day calendar, playoffs, standings, and rating updates. It also stores saves locally and supports JSON export/import.
 
 ## Features
-- Group setup with sliders and manual drag-and-drop placement
+- Group setup with discrete options (2/4/6/8/12/16) and manual drag-and-drop placement
 - Auto-distribution by strength with a per-group team limit
 - Calendar-based schedule with day locking and quick simulation
 - Manual score input, OT/SO handling, and result markers
 - Playoffs (R16, QF, SF, Final, 3rd place) with seeding rules
-- Standings tab with overall or per-group view
-- Rating table with OVR and delta indicators
+- Standings with overall or per-group view
+- Rating table with OVR and rating delta indicators
+- Auto-save of the current tournament state (restored on reload)
+- Final tournament screen with podium and rating change summary
 - Player team selection highlighting
 - Local saves plus JSON export/import (drag-and-drop supported)
 
@@ -26,10 +28,14 @@ A local, single-page simulator for an IIHF-style tournament. The app supports gr
 - `src/standings.ts` - standings and points logic
 - `backend/` - FastAPI app and country data
 - `public/svg/` - flag assets (SVG)
+- `public/federations/` - federation crests/logos (PNG)
 
 ## Data Files
-- `backend/countries.json` stores team name, rating_points, and ovr for the top 24 + RU/BY.
+- `backend/countries.json` stores team name, rating_points, ovr, and historical podiums for the top 32 national teams.
 - Flags are loaded from `public/svg/{code}.svg` using ISO country codes.
+- Historical medal fields (`podiums`) are based on open sources:
+  - IIHF Medallists: `https://www.iihf.com/en/statichub/4719/medallists`
+  - IIHF World Championship records (history context): `https://www.iihf.com/en/events/2025/wm/standings/final`
 
 ## Setup
 
@@ -53,21 +59,24 @@ Optional env:
 - `VITE_API_BASE` (default: `http://localhost:8000`)
 
 ## Usage
-1. Open the `Tournament` tab and set group parameters.
-2. Drag teams into groups, or use auto-distribution.
-3. Click team cards to mark player teams.
-4. Choose playoff seeding and bracket rules.
+1. Click `Создать турнир`.
+2. Choose group stage parameters and playoff rules in modal.
+3. Drag teams into groups, or use auto-distribution.
+4. Click team cards to mark player teams.
 5. Create the tournament to generate schedule.
-6. Use the calendar to play/simulate matches day-by-day.
-7. Check standings and playoff tabs for progress.
-8. Ratings update after tournament completion. Use reset to restore defaults.
+6. Use the calendar to play/simulate matches day-by-day (auto-advance to next day on sim).
+7. Check standings and playoff bracket for progress.
+8. Ratings update after tournament completion. Use reset or rebuild from saves.
 
 ## Saves
 - Save stores the current tournament snapshot in localStorage.
+- Auto-save stores the latest tournament state on each update.
 - Export writes a JSON file. Import accepts JSON files (button or drag-and-drop).
 - Storage keys:
   - `iihfTournamentSaves`
   - `iihfRatings`
+  - `iihfRatingDelta`
+  - `iihfCurrentTournament`
 
 Example export payload:
 ```
@@ -85,6 +94,7 @@ Example export payload:
     "playerTeamIds": [],
     "isTournamentCreated": false,
     "tournamentBaseRanks": {},
+    "tournamentBaseRatings": {},
     "ratingsCommitted": false
   }
 }
