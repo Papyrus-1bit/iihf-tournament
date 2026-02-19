@@ -1,5 +1,6 @@
 import type { FC, DragEvent, Dispatch, SetStateAction } from "react";
 import { Box, Button, Text } from "@chakra-ui/react";
+import { FiUser } from "react-icons/fi";
 import { Group, Team } from "../types";
 import Flag from "./Flag";
 
@@ -26,42 +27,110 @@ const GroupEditor: FC<Props> = ({
   maxTeamsPerGroup,
   lineCards = false,
 }) => {
-  const getStrength = (team: Team) => {
-    if (team.ratingPoints) return team.ratingPoints;
-    if (team.iihfRank) return 1000 / team.iihfRank;
-    return 1000;
+  const normalize = (value: number, min: number, max: number) => {
+    if (max <= min) return 0.5;
+    return (value - min) / (max - min);
+  };
+
+  const buildStrengthContext = (pool: Team[]) => {
+    const ratings = pool.map((item) => item.ratingPoints ?? 0);
+    const ovrs = pool.map((item) => item.ovr ?? 0);
+    const rankValues = pool.map((item) =>
+      item.iihfRank ? 1 / Math.max(item.iihfRank, 1) : 0
+    );
+    return {
+      ratingMin: Math.min(...ratings),
+      ratingMax: Math.max(...ratings),
+      ovrMin: Math.min(...ovrs),
+      ovrMax: Math.max(...ovrs),
+      rankMin: Math.min(...rankValues),
+      rankMax: Math.max(...rankValues),
+    };
+  };
+
+  const getCompositeStrength = (
+    team: Team,
+    context: {
+      ratingMin: number;
+      ratingMax: number;
+      ovrMin: number;
+      ovrMax: number;
+      rankMin: number;
+      rankMax: number;
+    }
+  ) => {
+    const ratingNorm = normalize(team.ratingPoints ?? 0, context.ratingMin, context.ratingMax);
+    const ovrNorm = normalize(team.ovr ?? 0, context.ovrMin, context.ovrMax);
+    const rankNorm = normalize(
+      team.iihfRank ? 1 / Math.max(team.iihfRank, 1) : 0,
+      context.rankMin,
+      context.rankMax
+    );
+
+    // Multi-factor strength (not only OVR): rating points + OVR + IIHF rank.
+    return ratingNorm * 0.55 + ovrNorm * 0.3 + rankNorm * 0.15;
   };
 
   const handleAutoDistribute = () => {
     const capacity = maxTeamsPerGroup ?? Number.POSITIVE_INFINITY;
     const pool = [...groups.flatMap((group) => group.teams), ...unassigned];
     if (pool.length === 0 || groups.length === 0) return;
-    const sorted = [...pool].sort((a, b) => getStrength(b) - getStrength(a));
+
+    const uniquePool = Array.from(new Map(pool.map((team) => [team.id, team])).values());
+    const strengthContext = buildStrengthContext(uniquePool);
+    const scored = uniquePool
+      .map((team) => ({
+        team,
+        score: getCompositeStrength(team, strengthContext),
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    const pots: Array<Array<{ team: Team; score: number }>> = [];
+    for (let i = 0; i < scored.length; i += groups.length) {
+      pots.push(scored.slice(i, i + groups.length));
+    }
+
     const nextGroups = groups.map((group) => ({ ...group, teams: [] as Team[] }));
     const totals = nextGroups.map(() => 0);
+    const nextUnassigned: Team[] = [];
 
-    sorted.forEach((team) => {
-      let targetIndex = 0;
-      for (let i = 1; i < nextGroups.length; i += 1) {
-        const sizeA = nextGroups[i].teams.length;
-        const sizeB = nextGroups[targetIndex].teams.length;
-        if (sizeA >= capacity) continue;
-        if (sizeB >= capacity || totals[i] < totals[targetIndex]) {
-          targetIndex = i;
-        } else if (totals[i] === totals[targetIndex] && sizeA < sizeB) {
-          targetIndex = i;
+    pots.forEach((pot) => {
+      const shuffledPot = [...pot]
+        .map((item) => ({ ...item, jitteredScore: item.score + (Math.random() - 0.5) * 0.12 }))
+        .sort((a, b) => b.jitteredScore - a.jitteredScore);
+
+      shuffledPot.forEach(({ team, score }) => {
+        const eligible = nextGroups
+          .map((_group, index) => index)
+          .filter((index) => nextGroups[index].teams.length < capacity);
+        if (eligible.length === 0) {
+          nextUnassigned.push(team);
+          return;
         }
-      }
-      if (nextGroups[targetIndex].teams.length < capacity) {
+
+        const minTotal = Math.min(...eligible.map((index) => totals[index]));
+        const nearBalanced = eligible.filter((index) => totals[index] <= minTotal + 0.04);
+        const minSize = Math.min(
+          ...nearBalanced.map((index) => nextGroups[index].teams.length)
+        );
+        const smallest = nearBalanced.filter(
+          (index) => nextGroups[index].teams.length === minSize
+        );
+        const targetIndex = smallest[Math.floor(Math.random() * smallest.length)];
         nextGroups[targetIndex].teams.push(team);
-        totals[targetIndex] += getStrength(team);
+        totals[targetIndex] += score;
+      });
+    });
+
+    const assignedIds = new Set(nextGroups.flatMap((group) => group.teams.map((team) => team.id)));
+    uniquePool.forEach((team) => {
+      if (!assignedIds.has(team.id) && !nextUnassigned.find((item) => item.id === team.id)) {
+        nextUnassigned.push(team);
       }
     });
 
     setGroups(nextGroups);
-    setUnassigned(
-      pool.filter((team) => !nextGroups.some((group) => group.teams.find((t) => t.id === team.id)))
-    );
+    setUnassigned(nextUnassigned);
   };
   const handleGroupNameChange = (groupIndex: number, name: string) => {
     const next = [...groups];
@@ -117,6 +186,7 @@ const GroupEditor: FC<Props> = ({
     const isSelected = playerTeamIds.includes(team.id);
     const ovrLabel = team.ovr ? `OVR ${team.ovr}` : "OVR —";
     const cardClass = lineCards ? "team-card team-card--line" : "team-card";
+    const flagSize = lineCards ? 24 : 28;
     return (
     <Box
       key={team.id}
@@ -131,12 +201,16 @@ const GroupEditor: FC<Props> = ({
       className={cardClass}
       data-selected={isSelected}
     >
-      <Flag code={team.flagCode} name={team.name} size={28} />
+      <Flag code={team.flagCode} name={team.name} size={flagSize} />
       <Box>
         <Text className="team-card__name">{team.name}</Text>
         <Text className="team-card__meta">{ovrLabel}</Text>
       </Box>
-      {isSelected && <span className="team-card__dot" />}
+      {isSelected && (
+        <span className="team-card__person" title="Выбранная команда">
+          <FiUser />
+        </span>
+      )}
     </Box>
     );
   };
@@ -149,6 +223,9 @@ const GroupEditor: FC<Props> = ({
           Автораспределение
         </Button>
       </Box>
+      <Text fontSize="xs" color="gray.500" mb={2}>
+        Алгоритм учитывает рейтинг, OVR, позицию в IIHF и добавляет случайность в рамках корзин.
+      </Text>
       <Text fontSize="sm" color="gray.500" mb={3}>
         Перетаскивайте команды между группами или в блок «Нераспределённые».
       </Text>

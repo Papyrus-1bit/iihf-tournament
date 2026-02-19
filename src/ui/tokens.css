@@ -220,19 +220,22 @@
   background: rgba(18, 19, 23, 0.96);
   border: none;
   border-radius: var(--ui-radius-sm);
-  padding: 6px 12px;
+  padding: 6px 10px;
   font-size: 12px;
   letter-spacing: 0.02em;
   color: var(--ui-text);
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 .team-card--line {
   width: auto;
   justify-content: flex-start;
+  padding: 4px 8px;
+  gap: 6px;
+  min-height: 38px;
 }
 
 .team-list--line {
@@ -252,12 +255,26 @@
   color: var(--ui-muted);
 }
 
-.team-card__dot {
-  width: 8px;
-  height: 8px;
+.team-card--line .team-card__name {
+  font-size: 12px;
+}
+
+.team-card--line .team-card__meta {
+  font-size: 10px;
+}
+
+.team-card__person {
+  width: 16px;
+  height: 16px;
+  margin-left: 2px;
   border-radius: 999px;
-  background: #4ade80;
-  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(245, 245, 247, 0.88);
+  background: rgba(245, 245, 247, 0.16);
+  flex: 0 0 auto;
+  font-size: 10px;
 }
 
 .team-card[data-selected=\"true\"] {
