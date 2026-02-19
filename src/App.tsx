@@ -7,12 +7,15 @@ import StandingsTable from "./components/StandingsTable";
 import RatingTable from "./components/RatingTable";
 import PlayoffBracket from "./components/PlayoffBracket";
 import Flag from "./components/Flag";
+import FederationLogo from "./components/FederationLogo";
 import { IconButton, StatCard, UiRoot } from "./ui";
 import {
   FiDownload,
   FiEdit2,
   FiFolder,
   FiPlusSquare,
+  FiRefreshCw,
+  FiRotateCcw,
   FiSave,
   FiTrash2,
   FiUpload,
@@ -31,16 +34,19 @@ import { calculateGroupStats, calculateOverallStats } from "./standings";
 
 const SELECTED_TEAM_KEY = "iihfSelectedTeam";
 const RATINGS_STORAGE_KEY = "iihfRatings";
+const RATINGS_DELTA_KEY = "iihfRatingDelta";
 const PODIUM_STORAGE_KEY = "iihfPodium";
 const PODIUM_VERSION_KEY = "iihfPodiumVersion";
 const PODIUM_VERSION = "4";
 const SAVES_STORAGE_KEY = "iihfTournamentSaves";
+const AUTO_SAVE_KEY = "iihfCurrentTournament";
 const DEFAULT_RATING = 1500;
 
 type PlayoffSeeding = "overall" | "byGroup" | "random" | "ratings";
 type PlayoffBracketRule = "seeded" | "cross" | "random";
 
 interface TournamentSaveData {
+  saveId?: string | null;
   tournamentName: string;
   groups: Group[];
   unassigned: Team[];
@@ -51,6 +57,7 @@ interface TournamentSaveData {
   playerTeamIds: string[];
   isTournamentCreated: boolean;
   tournamentBaseRanks: Record<string, number>;
+  tournamentBaseRatings: Record<string, number>;
   ratingsCommitted: boolean;
 }
 
@@ -103,6 +110,58 @@ const resolvePodiumBase = (
   return next;
 };
 
+const isPlayedMatch = (match: Match) =>
+  match.homeScore !== undefined && match.awayScore !== undefined;
+
+const buildPodiumDeltaFromPlayoffMatches = (playoffMatches: Match[]) => {
+  const finalMatch = playoffMatches.find(
+    (match) => match.round === "F" && isPlayedMatch(match)
+  );
+  if (!finalMatch) return {};
+
+  const resolveWinner = (match: Match) =>
+    isPlayedMatch(match)
+      ? (match.homeScore ?? 0) >= (match.awayScore ?? 0)
+        ? match.home
+        : match.away
+      : null;
+  const resolveLoser = (match: Match) =>
+    isPlayedMatch(match)
+      ? (match.homeScore ?? 0) >= (match.awayScore ?? 0)
+        ? match.away
+        : match.home
+      : null;
+
+  const delta: Record<string, PodiumCounts> = {};
+  const bump = (teamId: string, changes: Partial<PodiumCounts>) => {
+    const current = delta[teamId] ?? emptyPodium();
+    delta[teamId] = {
+      gold: current.gold + (changes.gold ?? 0),
+      silver: current.silver + (changes.silver ?? 0),
+      bronze: current.bronze + (changes.bronze ?? 0),
+      finals: current.finals + (changes.finals ?? 0),
+    };
+  };
+
+  const winner = resolveWinner(finalMatch);
+  const loser = resolveLoser(finalMatch);
+  if (winner && loser) {
+    bump(winner.id, { gold: 1, finals: 1 });
+    bump(loser.id, { silver: 1, finals: 1 });
+  }
+
+  const thirdMatch = playoffMatches.find(
+    (match) => match.round === "3P" && isPlayedMatch(match)
+  );
+  if (thirdMatch) {
+    const bronzeWinner = resolveWinner(thirdMatch);
+    if (bronzeWinner) {
+      bump(bronzeWinner.id, { bronze: 1 });
+    }
+  }
+  return delta;
+};
+
 interface TournamentSave {
   id: string;
   name: string;
@@ -134,6 +193,41 @@ const getRoundForSize = (size: number): MatchRound | null => {
   return null;
 };
 
+const buildTournamentRatingsMap = (
+  teams: Team[],
+  baseRatings: Record<string, number>,
+  groups: Group[],
+  playoffMatches: Match[]
+) => {
+  const ratingsMap = new Map<string, number>();
+  teams.forEach((team) => {
+    ratingsMap.set(team.id, baseRatings[team.id] ?? DEFAULT_RATING);
+  });
+
+  const kFactor = 20;
+  const applyMatch = (match: Match) => {
+    if (match.homeScore === undefined || match.awayScore === undefined) return;
+    const homeId = match.home.id;
+    const awayId = match.away.id;
+    const r1 = ratingsMap.get(homeId) ?? DEFAULT_RATING;
+    const r2 = ratingsMap.get(awayId) ?? DEFAULT_RATING;
+    const expected1 = 1 / (1 + 10 ** ((r2 - r1) / 400));
+    const expected2 = 1 - expected1;
+    const score1 =
+      match.homeScore > match.awayScore ? 1 : match.homeScore === match.awayScore ? 0.5 : 0;
+    const score2 = 1 - score1;
+    ratingsMap.set(homeId, r1 + kFactor * (score1 - expected1));
+    ratingsMap.set(awayId, r2 + kFactor * (score2 - expected2));
+  };
+
+  groups.forEach((group) => {
+    group.matches.forEach((match) => applyMatch(match));
+  });
+  playoffMatches.forEach((match) => applyMatch(match));
+
+  return ratingsMap;
+};
+
 const shuffle = <T,>(items: T[]) => {
   const next = [...items];
   for (let i = next.length - 1; i > 0; i -= 1) {
@@ -158,11 +252,15 @@ function App() {
   const [defaultRatings, setDefaultRatings] = useState<Record<string, number>>({});
   const [baseRatings, setBaseRatings] = useState<Record<string, number>>({});
   const [ratings, setRatings] = useState<Array<Team & { rating: number }>>([]);
+  const [ratingDeltas, setRatingDeltas] = useState<Record<string, number>>({});
+  const [defaultPodiumBase, setDefaultPodiumBase] = useState<Record<string, PodiumCounts>>({});
   const [podiumBase, setPodiumBase] = useState<Record<string, PodiumCounts>>({});
   const [tournamentBaseRanks, setTournamentBaseRanks] = useState<Record<string, number>>({});
+  const [tournamentBaseRatings, setTournamentBaseRatings] = useState<Record<string, number>>({});
   const [ratingsCommitted, setRatingsCommitted] = useState(false);
   const [tournamentName, setTournamentName] = useState("");
   const [savedTournaments, setSavedTournaments] = useState<TournamentSave[]>([]);
+  const [activeSaveId, setActiveSaveId] = useState<string | null>(null);
   const [editingSaveId, setEditingSaveId] = useState<string | null>(null);
   const [editingSaveName, setEditingSaveName] = useState("");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -170,7 +268,10 @@ function App() {
   const [isSetupOpen, setIsSetupOpen] = useState(false);
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [teamsError, setTeamsError] = useState<string | null>(null);
+  const [showFinalScreen, setShowFinalScreen] = useState(false);
+  const [ratingAnimationKey, setRatingAnimationKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const pendingAutoSaveRef = useRef<Partial<TournamentSaveData> | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -209,6 +310,17 @@ function App() {
           ovr: info.ovr,
         }));
 
+        const deltaRaw = localStorage.getItem(RATINGS_DELTA_KEY);
+        let storedDeltas: Record<string, number> = {};
+        if (deltaRaw) {
+          try {
+            storedDeltas = JSON.parse(deltaRaw) as Record<string, number>;
+          } catch {
+            storedDeltas = {};
+          }
+        }
+        setRatingDeltas(storedDeltas);
+
         const defaults: Record<string, number> = {};
         Object.entries(data).forEach(([code, info]) => {
           defaults[code] = info.rating_points;
@@ -228,6 +340,7 @@ function App() {
                 : (base.gold ?? 0) + (base.silver ?? 0),
           };
         });
+        setDefaultPodiumBase(fallbackPodiums);
         setPodiumBase(resolvePodiumBase(fallbackPodiums, storedPodiums));
 
         const nextBaseRatings: Record<string, number> = {};
@@ -272,6 +385,17 @@ function App() {
       }
     } catch {
       // ignore invalid stored saves
+    }
+  }, []);
+
+  useEffect(() => {
+    const raw = localStorage.getItem(AUTO_SAVE_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as Partial<TournamentSaveData>;
+      pendingAutoSaveRef.current = parsed;
+    } catch {
+      pendingAutoSaveRef.current = null;
     }
   }, []);
 
@@ -337,6 +461,23 @@ function App() {
     setIsTournamentCreated(false);
     setPlayoffMatches([]);
     setRatingsCommitted(false);
+    setTournamentBaseRatings({});
+    setShowFinalScreen(false);
+  };
+
+  const resetTournamentState = (clearName = false) => {
+    setGroups([]);
+    setUnassigned(teams);
+    setPlayoffMatches([]);
+    setIsTournamentCreated(false);
+    setRatingsCommitted(false);
+    setPlayerTeamIds([]);
+    setTournamentBaseRanks({});
+    setTournamentBaseRatings({});
+    setActiveSaveId(null);
+    setShowFinalScreen(false);
+    if (clearName) setTournamentName("");
+    localStorage.removeItem(AUTO_SAVE_KEY);
   };
 
   const handleCreateTournament = () => {
@@ -348,8 +489,11 @@ function App() {
     setPlayoffMatches([]);
     setIsTournamentCreated(true);
     setTournamentBaseRanks(buildRankMap(baseRatings));
+    setTournamentBaseRatings({ ...baseRatings });
     setRatingsCommitted(false);
+    setActiveSaveId(null);
     setIsSetupOpen(false);
+    setShowFinalScreen(false);
   };
 
   const handleCloseSetup = () => {
@@ -359,6 +503,7 @@ function App() {
 
 
   const buildSaveData = (): TournamentSaveData => ({
+    saveId: activeSaveId,
     tournamentName,
     groups,
     unassigned,
@@ -369,6 +514,7 @@ function App() {
     playerTeamIds,
     isTournamentCreated,
     tournamentBaseRanks,
+    tournamentBaseRatings,
     ratingsCommitted,
   });
 
@@ -378,6 +524,7 @@ function App() {
   };
 
   const applySaveData = (data: Partial<TournamentSaveData>) => {
+    setActiveSaveId(data.saveId ?? null);
     setTournamentName(data.tournamentName ?? "");
     setGroups(data.groups ?? []);
     setUnassigned(data.unassigned ?? []);
@@ -393,33 +540,72 @@ function App() {
     setPlayerTeamIds(data.playerTeamIds ?? []);
     setIsTournamentCreated(!!data.isTournamentCreated);
     setTournamentBaseRanks(data.tournamentBaseRanks ?? buildRankMap(baseRatings));
+    setTournamentBaseRatings(data.tournamentBaseRatings ?? {});
     setRatingsCommitted(!!data.ratingsCommitted);
   };
+
+  useEffect(() => {
+    if (Object.keys(baseRatings).length === 0) return;
+    if (!pendingAutoSaveRef.current) return;
+    applySaveData(pendingAutoSaveRef.current);
+    pendingAutoSaveRef.current = null;
+  }, [baseRatings]);
+
+  useEffect(() => {
+    if (teams.length === 0) return;
+    const data = buildSaveData();
+    localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(data));
+  }, [
+    tournamentName,
+    groups,
+    unassigned,
+    playoffMatches,
+    playoffSeeding,
+    playoffBracketRule,
+    teamsPerGroupLimit,
+    playerTeamIds,
+    isTournamentCreated,
+    tournamentBaseRanks,
+    tournamentBaseRatings,
+    ratingsCommitted,
+    teams.length,
+  ]);
 
   const handleSaveTournament = () => {
     if (!isTournamentCreated) return;
     const id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
+      activeSaveId ??
+      (typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
-        : `save-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        : `save-${Date.now()}-${Math.random().toString(16).slice(2)}`);
     const name =
       tournamentName?.trim() ||
       `Турнир ${new Date().toLocaleDateString("ru-RU")}`;
+    const data = { ...buildSaveData(), saveId: id };
     const save: TournamentSave = {
       id,
       name,
       savedAt: new Date().toISOString(),
-      data: buildSaveData(),
+      data,
     };
-    persistSaves([save, ...savedTournaments]);
+    persistSaves([save, ...savedTournaments.filter((entry) => entry.id !== id)]);
+    setActiveSaveId(id);
   };
 
   const handleLoadTournament = (save: TournamentSave) => {
     applySaveData(save.data);
+    setActiveSaveId(save.id);
+    setIsSetupOpen(false);
+    setShowFinalScreen(false);
   };
 
   const handleDeleteSave = (saveId: string) => {
-    persistSaves(savedTournaments.filter((save) => save.id !== saveId));
+    const next = savedTournaments.filter((save) => save.id !== saveId);
+    persistSaves(next);
+    if (activeSaveId === saveId) {
+      setActiveSaveId(null);
+    }
+    handleRebuildRatingsFromSaves(next);
   };
 
   const handleStartRenameSave = (save: TournamentSave) => {
@@ -479,7 +665,10 @@ function App() {
       } else if (parsed && typeof parsed === "object") {
         data = parsed as Partial<TournamentSaveData>;
       }
-      if (data) applySaveData(data);
+      if (data) {
+        applySaveData(data);
+        setActiveSaveId(null);
+      }
     } catch {
       // ignore invalid file
     }
@@ -501,6 +690,10 @@ function App() {
     setUnassigned(ranked);
   };
 
+  const triggerRatingTableAnimation = () => {
+    setRatingAnimationKey((prev) => prev + 1);
+  };
+
   const commitRatingsAsBase = (sourceRatings: Array<Team & { rating: number }> = ratings) => {
     if (sourceRatings.length === 0) return;
     const nextBase: Record<string, number> = {};
@@ -512,13 +705,77 @@ function App() {
     applyRatingsToTeams(nextBase);
   };
 
+  const handleRebuildRatingsFromSaves = (saves: TournamentSave[] = savedTournaments) => {
+    if (
+      teams.length === 0 ||
+      Object.keys(defaultRatings).length === 0 ||
+      Object.keys(defaultPodiumBase).length === 0
+    ) {
+      return;
+    }
+    const ordered = [...saves].sort(
+      (a, b) => new Date(a.savedAt).getTime() - new Date(b.savedAt).getTime()
+    );
+    let nextRatings = { ...defaultRatings };
+    let nextPodium = { ...defaultPodiumBase };
+
+    ordered.forEach((save) => {
+      const data = save.data;
+      if (!data?.ratingsCommitted) return;
+      const map = buildTournamentRatingsMap(
+        teams,
+        nextRatings,
+        data.groups ?? [],
+        data.playoffMatches ?? []
+      );
+      const merged: Record<string, number> = {};
+      teams.forEach((team) => {
+        merged[team.id] = Math.round(
+          map.get(team.id) ?? nextRatings[team.id] ?? DEFAULT_RATING
+        );
+      });
+      nextRatings = merged;
+      nextPodium = mergePodium(
+        nextPodium,
+        buildPodiumDeltaFromPlayoffMatches(data.playoffMatches ?? [])
+      );
+    });
+
+    const nextDeltas: Record<string, number> = {};
+    teams.forEach((team) => {
+      const base = defaultRatings[team.id] ?? DEFAULT_RATING;
+      const current = nextRatings[team.id] ?? base;
+      const delta = Math.round(current - base);
+      if (delta !== 0) {
+        nextDeltas[team.id] = delta;
+      }
+    });
+
+    setRatingDeltas(nextDeltas);
+    localStorage.setItem(RATINGS_DELTA_KEY, JSON.stringify(nextDeltas));
+    setBaseRatings(nextRatings);
+    localStorage.setItem(RATINGS_STORAGE_KEY, JSON.stringify(nextRatings));
+    setTournamentBaseRanks(buildRankMap(nextRatings));
+    applyRatingsToTeams(nextRatings);
+    setPodiumBase(nextPodium);
+    localStorage.setItem(PODIUM_STORAGE_KEY, JSON.stringify(nextPodium));
+    localStorage.setItem(PODIUM_VERSION_KEY, PODIUM_VERSION);
+    triggerRatingTableAnimation();
+  };
+
 
   const handleResetRatings = () => {
     setBaseRatings(defaultRatings);
     localStorage.removeItem(RATINGS_STORAGE_KEY);
+    localStorage.removeItem(RATINGS_DELTA_KEY);
+    setRatingDeltas({});
     setTournamentBaseRanks(buildRankMap(defaultRatings));
     applyRatingsToTeams(defaultRatings);
+    setPodiumBase(defaultPodiumBase);
+    localStorage.setItem(PODIUM_STORAGE_KEY, JSON.stringify(defaultPodiumBase));
+    localStorage.setItem(PODIUM_VERSION_KEY, PODIUM_VERSION);
     setRatingsCommitted(false);
+    triggerRatingTableAnimation();
   };
 
   const togglePlayerTeam = (teamId: string) => {
@@ -532,7 +789,7 @@ function App() {
       setRatings([]);
       return;
     }
-    const ratingsMap = new Map<string, number>();
+    let ratingsMap = new Map<string, number>();
     teams.forEach((team) => {
       ratingsMap.set(team.id, baseRatings[team.id] ?? DEFAULT_RATING);
     });
@@ -553,28 +810,8 @@ function App() {
         playoffMatches.some((match) => match.round === "F");
     const tournamentCompleteLocal = groupStageCompleteLocal && playoffCompleteLocal;
 
-    const kFactor = 20;
-    const applyMatch = (match: Match) => {
-      if (match.homeScore === undefined || match.awayScore === undefined) return;
-      const homeId = match.home.id;
-      const awayId = match.away.id;
-      const r1 = ratingsMap.get(homeId) ?? DEFAULT_RATING;
-      const r2 = ratingsMap.get(awayId) ?? DEFAULT_RATING;
-      const expected1 = 1 / (1 + 10 ** ((r2 - r1) / 400));
-      const expected2 = 1 - expected1;
-      const score1 =
-        match.homeScore > match.awayScore ? 1 : match.homeScore === match.awayScore ? 0.5 : 0;
-      const score2 = 1 - score1;
-      ratingsMap.set(homeId, r1 + kFactor * (score1 - expected1));
-      ratingsMap.set(awayId, r2 + kFactor * (score2 - expected2));
-    };
-
-    if (tournamentCompleteLocal) {
-      groups.forEach((group) => {
-        group.matches.forEach((match) => applyMatch(match));
-      });
-
-      playoffMatches.forEach((match) => applyMatch(match));
+    if (tournamentCompleteLocal && !ratingsCommitted) {
+      ratingsMap = buildTournamentRatingsMap(teams, baseRatings, groups, playoffMatches);
     }
 
     const nextRatings = teams
@@ -584,7 +821,7 @@ function App() {
       }))
       .sort((a, b) => b.rating - a.rating);
     setRatings(nextRatings);
-  }, [teams, baseRatings, groups, playoffMatches]);
+  }, [teams, baseRatings, groups, playoffMatches, ratingsCommitted]);
 
   const groupMatches = useMemo(
     () => groups.flatMap((group) => group.matches),
@@ -594,6 +831,61 @@ function App() {
     () => [...groupMatches, ...playoffMatches],
     [groupMatches, playoffMatches]
   );
+  const historicalTeamStatsById = useMemo(() => {
+    const stats: Record<
+      string,
+      {
+        played: number;
+        wins: number;
+        losses: number;
+        otGames: number;
+        shootoutGames: number;
+        form: Array<"W" | "L" | "T">;
+      }
+    > = {};
+    const applyMatch = (match: Match, teamId: string, isHome: boolean) => {
+      const current = stats[teamId] ?? {
+        played: 0,
+        wins: 0,
+        losses: 0,
+        otGames: 0,
+        shootoutGames: 0,
+        form: [],
+      };
+      const goalsFor = isHome ? match.homeScore ?? 0 : match.awayScore ?? 0;
+      const goalsAgainst = isHome ? match.awayScore ?? 0 : match.homeScore ?? 0;
+      if (goalsFor > goalsAgainst) {
+        current.wins += 1;
+        current.form.push("W");
+      } else if (goalsFor < goalsAgainst) {
+        current.losses += 1;
+        current.form.push("L");
+      } else {
+        current.form.push("T");
+      }
+      current.played += 1;
+      if (match.overtime) current.otGames += 1;
+      if (match.shootout) current.shootoutGames += 1;
+      stats[teamId] = current;
+    };
+
+    savedTournaments.forEach((save) => {
+      if (save.id === activeSaveId) return;
+      const data = save.data;
+      if (!data?.ratingsCommitted) return;
+      const saveMatches = [
+        ...(data.groups ?? []).flatMap((group) => group.matches),
+        ...(data.playoffMatches ?? []),
+      ]
+        .filter(isPlayedMatch)
+        .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+      saveMatches.forEach((match) => {
+        applyMatch(match, match.home.id, true);
+        applyMatch(match, match.away.id, false);
+      });
+    });
+    return stats;
+  }, [savedTournaments, activeSaveId]);
   const bracketSize = useMemo(() => getBracketSize(groups), [groups]);
   const initialRound = useMemo(() => getRoundForSize(bracketSize), [bracketSize]);
   const participantTeams = useMemo(
@@ -617,6 +909,7 @@ function App() {
       overallStats[0]?.team ??
       fallbackTeam;
     if (!selectedTeam) return null;
+    const historical = historicalTeamStatsById[selectedTeam.id];
     const teamMatches = allMatches
       .filter(
         (match) =>
@@ -625,11 +918,11 @@ function App() {
           match.awayScore !== undefined
       )
       .sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-    let wins = 0;
-    let losses = 0;
-    let otGames = 0;
-    let shootoutGames = 0;
-    const form: Array<"W" | "L" | "T"> = [];
+    let wins = historical?.wins ?? 0;
+    let losses = historical?.losses ?? 0;
+    let otGames = historical?.otGames ?? 0;
+    let shootoutGames = historical?.shootoutGames ?? 0;
+    const form: Array<"W" | "L" | "T"> = [...(historical?.form ?? [])];
     teamMatches.forEach((match) => {
       const isHome = match.home.id === selectedTeam.id;
       const goalsFor = isHome ? match.homeScore ?? 0 : match.awayScore ?? 0;
@@ -646,11 +939,12 @@ function App() {
       if (match.overtime) otGames += 1;
       if (match.shootout) shootoutGames += 1;
     });
-    const played = teamMatches.length;
+    const played = (historical?.played ?? 0) + teamMatches.length;
     const winPct = played > 0 ? Math.round((wins / played) * 100) : 0;
     const last10 = form.slice(-10);
     return {
       team: selectedTeam,
+      played,
       wins,
       losses,
       otGames,
@@ -658,7 +952,7 @@ function App() {
       winPct,
       last10,
     };
-  }, [allMatches, overallStats, selectedTeamId, teams]);
+  }, [allMatches, overallStats, selectedTeamId, teams, historicalTeamStatsById]);
 
   const buildSeeding = (size: number) => {
     if (size === 0) return [];
@@ -989,85 +1283,166 @@ function App() {
     if (!isTournamentCreated) return;
     if (!tournamentComplete) return;
     if (ratingsCommitted) return;
-    if (ratings.length === 0) return;
-    commitRatingsAsBase(ratings);
-    if (playoffRequired) {
-      const finalMatch = playoffMatches.find((match) => match.round === "F");
-      if (
-        finalMatch &&
-        finalMatch.homeScore !== undefined &&
-        finalMatch.awayScore !== undefined
-      ) {
-        const resolveWinner = (match: Match) =>
-          match.homeScore !== undefined && match.awayScore !== undefined
-            ? match.homeScore >= match.awayScore
-              ? match.home
-              : match.away
-            : null;
-        const resolveLoser = (match: Match) =>
-          match.homeScore !== undefined && match.awayScore !== undefined
-            ? match.homeScore >= match.awayScore
-              ? match.away
-              : match.home
-            : null;
+    if (teams.length === 0) return;
+    const finalRatingsMap = buildTournamentRatingsMap(teams, baseRatings, groups, playoffMatches);
+    const finalRatings = teams
+      .map((team) => ({
+        ...team,
+        rating: finalRatingsMap.get(team.id) ?? baseRatings[team.id] ?? DEFAULT_RATING,
+      }))
+      .sort((a, b) => b.rating - a.rating);
 
-        const winner = resolveWinner(finalMatch);
-        const loser = resolveLoser(finalMatch);
-        const delta: Record<string, PodiumCounts> = {};
-        const bump = (teamId: string, changes: Partial<PodiumCounts>) => {
-          const current = delta[teamId] ?? emptyPodium();
-          delta[teamId] = {
-            gold: current.gold + (changes.gold ?? 0),
-            silver: current.silver + (changes.silver ?? 0),
-            bronze: current.bronze + (changes.bronze ?? 0),
-            finals: current.finals + (changes.finals ?? 0),
-          };
-        };
-
-        if (winner && loser) {
-          bump(winner.id, { gold: 1, finals: 1 });
-          bump(loser.id, { silver: 1, finals: 1 });
-        }
-
-        const thirdMatch = playoffMatches.find((match) => match.round === "3P");
-        if (
-          thirdMatch &&
-          thirdMatch.homeScore !== undefined &&
-          thirdMatch.awayScore !== undefined
-        ) {
-          const bronzeWinner = resolveWinner(thirdMatch);
-          if (bronzeWinner) {
-            bump(bronzeWinner.id, { bronze: 1 });
-          }
-        }
-
-        if (Object.keys(delta).length > 0) {
-          setPodiumBase((prev) => {
-            const next = mergePodium(prev, delta);
-            localStorage.setItem(PODIUM_STORAGE_KEY, JSON.stringify(next));
-            localStorage.setItem(PODIUM_VERSION_KEY, PODIUM_VERSION);
-            return next;
-          });
-        }
+    setRatings(finalRatings);
+    const deltaUpdates: Record<string, number> = {};
+    finalRatings.forEach((team) => {
+      const base =
+        tournamentBaseRatings[team.id] ??
+        baseRatings[team.id] ??
+        team.rating;
+      const delta = Math.round(team.rating - base);
+      if (delta !== 0) {
+        deltaUpdates[team.id] = (ratingDeltas[team.id] ?? 0) + delta;
       }
+    });
+    if (Object.keys(deltaUpdates).length > 0) {
+      const next = { ...ratingDeltas, ...deltaUpdates };
+      setRatingDeltas(next);
+      localStorage.setItem(RATINGS_DELTA_KEY, JSON.stringify(next));
     }
+    commitRatingsAsBase(finalRatings);
+    const podiumDelta = playoffRequired
+      ? buildPodiumDeltaFromPlayoffMatches(playoffMatches)
+      : {};
+    if (Object.keys(podiumDelta).length > 0) {
+      setPodiumBase((prev) => {
+        const next = mergePodium(prev, podiumDelta);
+        localStorage.setItem(PODIUM_STORAGE_KEY, JSON.stringify(next));
+        localStorage.setItem(PODIUM_VERSION_KEY, PODIUM_VERSION);
+        return next;
+      });
+    }
+    triggerRatingTableAnimation();
     setRatingsCommitted(true);
   }, [
     isTournamentCreated,
     tournamentComplete,
     ratingsCommitted,
-    ratings,
+    teams,
+    groups,
+    ratingDeltas,
     playoffRequired,
     playoffMatches,
+    tournamentBaseRatings,
+    baseRatings,
   ]);
 
-  const displayBaseRanks = useMemo(
-    () =>
-      Object.keys(tournamentBaseRanks).length > 0
-        ? tournamentBaseRanks
-        : buildRankMap(baseRatings),
-    [tournamentBaseRanks, baseRatings]
-  );
+  useEffect(() => {
+    if (tournamentComplete) {
+      setShowFinalScreen(true);
+    }
+  }, [tournamentComplete]);
+
+  const ratingById = useMemo(() => {
+    const map = new Map<string, number>();
+    ratings.forEach((team) => map.set(team.id, team.rating));
+    return map;
+  }, [ratings]);
+
+  const finalPlacements = useMemo(() => {
+    if (!tournamentComplete) return [];
+    const finalMatch = playoffMatches.find(
+      (match) =>
+        match.round === "F" && match.homeScore !== undefined && match.awayScore !== undefined
+    );
+    if (!finalMatch) {
+      const fallback = overallStats.slice(0, 4).map((stat) => stat.team);
+      return fallback.map((team, index) => {
+        const base =
+          tournamentBaseRatings[team.id] ??
+          baseRatings[team.id] ??
+          ratingById.get(team.id) ??
+          0;
+        const current = ratingById.get(team.id) ?? base;
+        return {
+          place: index + 1,
+          team,
+          delta: Math.round(current - base),
+          rating: Math.round(current),
+        };
+      });
+    }
+    const winner =
+      (finalMatch.homeScore ?? 0) >= (finalMatch.awayScore ?? 0)
+        ? finalMatch.home
+        : finalMatch.away;
+    const runnerUp =
+      (finalMatch.homeScore ?? 0) >= (finalMatch.awayScore ?? 0)
+        ? finalMatch.away
+        : finalMatch.home;
+    let third: Team | null = null;
+    let fourth: Team | null = null;
+    const thirdMatch = playoffMatches.find(
+      (match) =>
+        match.round === "3P" && match.homeScore !== undefined && match.awayScore !== undefined
+    );
+    if (thirdMatch) {
+      third =
+        (thirdMatch.homeScore ?? 0) >= (thirdMatch.awayScore ?? 0)
+          ? thirdMatch.home
+          : thirdMatch.away;
+      fourth =
+        (thirdMatch.homeScore ?? 0) >= (thirdMatch.awayScore ?? 0)
+          ? thirdMatch.away
+          : thirdMatch.home;
+    } else {
+      const sfMatches = playoffMatches.filter(
+        (match) =>
+          match.round === "SF" &&
+          match.homeScore !== undefined &&
+          match.awayScore !== undefined
+      );
+      if (sfMatches.length >= 2) {
+        const losers = sfMatches.map((match) =>
+          (match.homeScore ?? 0) >= (match.awayScore ?? 0) ? match.away : match.home
+        );
+        third = losers[0];
+        fourth = losers[1];
+      }
+    }
+    return [winner, runnerUp, third, fourth]
+      .filter((team): team is Team => !!team)
+      .map((team, index) => {
+        const base =
+          tournamentBaseRatings[team.id] ??
+          baseRatings[team.id] ??
+          ratingById.get(team.id) ??
+          0;
+        const current = ratingById.get(team.id) ?? base;
+        return {
+          place: index + 1,
+          team,
+          delta: Math.round(current - base),
+          rating: Math.round(current),
+        };
+      });
+  }, [tournamentComplete, playoffMatches, baseRatings, ratingById]);
+
+  const selectedPodium = teamSummary
+    ? podiumBase[teamSummary.team.id] ?? emptyPodium()
+    : emptyPodium();
+  const medalItems = [
+    { key: "gold", value: selectedPodium.gold },
+    { key: "silver", value: selectedPodium.silver },
+    { key: "bronze", value: selectedPodium.bronze },
+  ].filter((item) => item.value > 0);
+  const medalsTotal = selectedPodium.gold + selectedPodium.silver + selectedPodium.bronze;
+  const winGaugeColor =
+    (teamSummary?.winPct ?? 0) > 50
+      ? "#22c55e"
+      : (teamSummary?.winPct ?? 0) < 50
+        ? "#ef4444"
+        : "#f5f5f7";
+  const winGaugeAngle = Math.max(0, Math.min(360, ((teamSummary?.winPct ?? 0) / 100) * 360));
   
   return (
     <UiRoot>
@@ -1087,75 +1462,73 @@ function App() {
       {teamsError && <Text color="red.500">{teamsError}</Text>}
       <Box className="ui-stack">
         <Box className="hero-bar" data-testid="tournament-hero">
-          <Box display="flex" justifyContent="space-between" alignItems="center" gap={3} flexWrap="wrap">
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={3} flexWrap="wrap">
             <Box display="flex" flexDirection="column" gap={2}>
               <img
-                src="/iihf-logo.svg"
+                src="/iihf-logo2.svg"
                 alt="IIHF"
                 className="hero-logo"
                 loading="lazy"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                style={{ cursor: "pointer" }}
               />
               {tournamentName.trim() && (
                 <Text className="ui-subtitle">{tournamentName.trim()}</Text>
               )}
             </Box>
-            <Box display="flex" alignItems="center" gap={2} flexWrap="wrap" className="hero-inline">
+            <Box display="flex" gap={1} alignItems="center">
+              <button
+                type="button"
+                className="ui-button hero-create-button"
+                onClick={() => setIsSetupOpen(true)}
+                title="Создать турнир"
+                aria-label="Создать турнир"
+              >
+                <FiPlusSquare />
+                <span>Создать турнир</span>
+              </button>
               {isTournamentCreated && (
                 <>
-                  <Box className="hero-facts-inline">
-                    <StatCard label="Команд" value={participantCount} />
-                    <StatCard label="Групп" value={groupCount || "—"} />
-                  </Box>
-                  {participantTeams.length > 0 && (
-                    <Box className="participant-strip participant-strip--inline">
-                      {participantTeams.map((team) => (
-                        <span
-                          key={team.id}
-                          className="participant-flag"
-                          data-eliminated={eliminatedTeamIds.has(team.id)}
-                        >
-                          <Flag code={team.flagCode} name={team.name} size={22} />
-                        </span>
-                      ))}
-                    </Box>
-                  )}
+                  <IconButton
+                    onClick={handleSaveTournament}
+                    title="Сохранить"
+                    aria-label="Сохранить"
+                  >
+                    <FiSave />
+                  </IconButton>
+                  <IconButton
+                    onClick={handleExportSave}
+                    title="Экспорт"
+                    aria-label="Экспорт"
+                  >
+                    <FiDownload />
+                  </IconButton>
                 </>
               )}
-              <Box display="flex" gap={1} alignItems="center">
-                <IconButton
-                  onClick={() => setIsSetupOpen(true)}
-                  title="Новый турнир"
-                  aria-label="Новый турнир"
-                >
-                  <FiPlusSquare />
-                </IconButton>
-                {isTournamentCreated && (
-                  <>
-                    <IconButton
-                      onClick={handleSaveTournament}
-                      title="Сохранить"
-                      aria-label="Сохранить"
-                    >
-                      <FiSave />
-                    </IconButton>
-                    <IconButton
-                      onClick={handleExportSave}
-                      title="Экспорт"
-                      aria-label="Экспорт"
-                    >
-                      <FiDownload />
-                    </IconButton>
-                  </>
-                )}
-              </Box>
             </Box>
           </Box>
+          {isTournamentCreated && (
+            <Box className="hero-secondary-row">
+              <Box className="hero-facts-inline">
+                <StatCard label="Команд" value={participantCount} />
+                <StatCard label="Групп" value={groupCount || "—"} />
+              </Box>
+              {participantTeams.length > 0 && (
+                <Box className="participant-strip participant-strip--inline">
+                  {participantTeams.map((team) => (
+                    <span
+                      key={team.id}
+                      className="participant-flag"
+                      data-eliminated={eliminatedTeamIds.has(team.id)}
+                    >
+                      <Flag code={team.flagCode} name={team.name} size={22} />
+                    </span>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          )}
         </Box>
-        {!isTournamentCreated && groups.length > 0 && teams.length > 0 && (
-          <Text fontSize="sm" color="gray.600">
-            Распределение команд доступно в настройках турнира.
-          </Text>
-        )}
         {isTournamentCreated && (
           <>
             {tournamentComplete ? (
@@ -1194,48 +1567,68 @@ function App() {
         )}
       </Box>
       <Box className="ui-stack">
-        <Box className="ui-card" data-testid="team-summary-card">
-          <Text className="ui-subtitle">Команда</Text>
+        <Box className="ui-card team-summary-card" data-testid="team-summary-card">
           {teamSummary ? (
             <>
-              <Box className="top-team-row">
-                <Box className="top-team-header">
-                  <Flag
+              <Box className="team-summary-hero">
+                <Box className="team-summary-left">
+                  <FederationLogo
                     code={teamSummary.team.flagCode}
                     name={teamSummary.team.name}
-                    size={34}
+                    size={96}
                   />
-                  <Box>
+                  <Box className="team-summary-title-col">
+                    <Box className="team-summary-kicker">
+                      <Flag
+                        code={teamSummary.team.flagCode}
+                        name={teamSummary.team.name}
+                        size={18}
+                      />
+                      <span>{teamSummary.team.ovr ? `OVR ${teamSummary.team.ovr}` : "OVR —"}</span>
+                    </Box>
                     <Text className="top-team-name" data-testid="team-summary-name">
                       {teamSummary.team.name}
                     </Text>
-                    <Text className="top-team-meta">
-                      {teamSummary.team.ovr ? `OVR ${teamSummary.team.ovr}` : "OVR —"}
-                    </Text>
                   </Box>
                 </Box>
-                <Box className="top-team-facts top-team-facts--inline">
-                <div className="top-team-fact">
-                  <span>В</span>
-                  <strong>{teamSummary.wins}</strong>
-                </div>
-                <div className="top-team-fact">
-                  <span>П</span>
-                  <strong>{teamSummary.losses}</strong>
-                </div>
-                <div className="top-team-fact">
-                  <span>ОТ</span>
-                  <strong>{teamSummary.otGames}</strong>
-                </div>
-                <div className="top-team-fact">
-                  <span>Б</span>
-                  <strong>{teamSummary.shootoutGames}</strong>
-                </div>
-                <div className="top-team-fact">
-                  <span>% побед</span>
-                  <strong>{teamSummary.winPct}%</strong>
-                </div>
-              </Box>
+                <Box className="team-summary-right">
+                  <Box className="team-summary-topstats">
+                    <span>{teamSummary.played} матчей</span>
+                    <span>{teamSummary.winPct}% побед</span>
+                    <div
+                      className="win-rate-gauge"
+                      style={{
+                        background: `conic-gradient(${winGaugeColor} ${winGaugeAngle}deg, rgba(255,255,255,0.14) 0deg)`,
+                      }}
+                    >
+                      <div className="win-rate-gauge__inner">
+                        <strong>{teamSummary.winPct}%</strong>
+                      </div>
+                    </div>
+                  </Box>
+                  {medalItems.length > 0 ? (
+                    <Box className="team-summary-factoids">
+                      {medalItems.map((item) => (
+                        <div
+                          key={item.key}
+                          className="team-summary-factoid"
+                          data-medal={item.key}
+                        >
+                          <strong>{item.value}</strong>
+                        </div>
+                      ))}
+                    </Box>
+                  ) : (
+                    <Box className="team-summary-medals-empty">
+                      <span className="team-summary-medals-stack">
+                        <i data-medal="gold" />
+                        <i data-medal="silver" />
+                        <i data-medal="bronze" />
+                      </span>
+                      <strong>{medalsTotal}</strong>
+                    </Box>
+                  )}
+                </Box>
               </Box>
               {teamSummary.last10.length > 0 && (
                 <Box mt={3}>
@@ -1256,21 +1649,35 @@ function App() {
         </Box>
 
         <Box className="ui-card">
-          <Text className="ui-subtitle">Рейтинг команд</Text>
+          <Box className="rating-card-header">
+            <Text className="ui-subtitle">Рейтинг команд</Text>
+            <Box display="flex" gap={1}>
+              <IconButton
+                title="Обновить рейтинг по сохранениям"
+                aria-label="Обновить рейтинг по сохранениям"
+                onClick={() => handleRebuildRatingsFromSaves()}
+              >
+                <FiRefreshCw />
+              </IconButton>
+              <IconButton
+                title="Сбросить рейтинг"
+                aria-label="Сбросить рейтинг"
+                onClick={handleResetRatings}
+              >
+                <FiRotateCcw />
+              </IconButton>
+            </Box>
+          </Box>
           <Box mt={3}>
             <RatingTable
+              key={`rating-table-${ratingAnimationKey}`}
               ratings={ratings}
-              baseRanks={displayBaseRanks}
+              ratingDeltas={ratingDeltas}
               playerTeamIds={playerTeamIds}
               podium={podiumBase}
               selectedTeamId={selectedTeamId}
               onSelectTeam={(teamId) => setSelectedTeamId(teamId)}
             />
-          </Box>
-          <Box mt={2}>
-            <Button size="sm" variant="outline" onClick={handleResetRatings}>
-              Сбросить рейтинг
-            </Button>
           </Box>
         </Box>
       </Box>
@@ -1508,6 +1915,59 @@ function App() {
                   Создать турнир
                 </Button>
               )}
+            </Box>
+          </Box>
+        </Box>
+      )}
+      {showFinalScreen && tournamentComplete && (
+        <Box className="final-screen">
+          <Box className="final-screen__card">
+            <Text className="final-screen__title">Турнир завершён</Text>
+            <Text className="final-screen__subtitle">
+              Финальные места и изменение рейтинга
+            </Text>
+            <Box className="final-podium">
+              {finalPlacements.map((entry) => {
+                const deltaLabel =
+                  entry.delta > 0 ? `+${entry.delta}` : `${entry.delta}`;
+                return (
+                  <Box key={entry.team.id} className="final-podium__slot" data-place={entry.place}>
+                    <Text className="final-podium__place">{entry.place}</Text>
+                    <Box className="final-podium__team">
+                      <Flag code={entry.team.flagCode} name={entry.team.name} size={28} />
+                      <Box>
+                        <Text className="final-podium__name">{entry.team.name}</Text>
+                        <Text className="final-podium__meta">
+                          Рейтинг {entry.rating}{" "}
+                          <span
+                            className="final-podium__delta"
+                            data-up={entry.delta > 0}
+                            data-down={entry.delta < 0}
+                          >
+                            {deltaLabel}
+                          </span>
+                        </Text>
+                      </Box>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+            <Box className="final-screen__actions">
+              <Button size="sm" onClick={handleSaveTournament}>
+                Сохранить турнир
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  handleSaveTournament();
+                  resetTournamentState(true);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                Вернуться на главную
+              </Button>
             </Box>
           </Box>
         </Box>

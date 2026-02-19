@@ -14,9 +14,9 @@ interface RatingRow {
 
 interface Props {
   ratings: RatingRow[];
-  baseRanks?: Record<string, number>;
   playerTeamIds?: string[];
   podium?: Record<string, PodiumCounts>;
+  ratingDeltas?: Record<string, number>;
   selectedTeamId?: string | null;
   onSelectTeam?: (teamId: string) => void;
 }
@@ -25,9 +25,9 @@ const emptyPodium: PodiumCounts = { gold: 0, silver: 0, bronze: 0, finals: 0 };
 
 const RatingTable: FC<Props> = ({
   ratings,
-  baseRanks = {},
   playerTeamIds = [],
   podium = {},
+  ratingDeltas = {},
   selectedTeamId,
   onSelectTeam,
 }) => {
@@ -36,8 +36,8 @@ const RatingTable: FC<Props> = ({
   }
 
   return (
-    <Box>
-      <Box>
+    <Box className="rating-table">
+      <Box className="rating-table-body">
         <Box fontWeight="bold" mb={2} className="rating-row rating-header">
           <Box>#</Box>
           <Box>Команда</Box>
@@ -50,8 +50,7 @@ const RatingTable: FC<Props> = ({
         </Box>
         {ratings.map((team, index) => {
           const currentRank = index + 1;
-          const baseRank = baseRanks[team.id];
-          const delta = baseRank ? baseRank - currentRank : 0;
+          const delta = ratingDeltas[team.id] ?? 0;
           const deltaColor = delta > 0 ? "green.600" : delta < 0 ? "red.600" : "gray.500";
           const podiumStats = podium[team.id] ?? emptyPodium;
           const highlight = playerTeamIds.includes(team.id)
@@ -72,7 +71,7 @@ const RatingTable: FC<Props> = ({
               <Box>{currentRank}</Box>
               <Box display="flex" alignItems="center" gap={2}>
                 <span className="rating-flag">
-                  <Flag code={team.flagCode} name={team.name} size={18} />
+                  <Flag code={team.flagCode} name={team.name} size={20} />
                 </span>
                 <Text fontWeight="bold">{team.name}</Text>
               </Box>
