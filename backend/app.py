@@ -8,6 +8,7 @@ import random
 import uuid
 
 import numpy as np
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -30,6 +31,8 @@ from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COUNTRIES_FILE = os.path.join(BASE_DIR, "countries.json")
+# Load backend/.env automatically (if present).
+load_dotenv(os.path.join(BASE_DIR, ".env"), override=False)
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql+psycopg://iihf:iihf@localhost:5432/iihf",

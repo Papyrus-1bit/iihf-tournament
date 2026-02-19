@@ -55,6 +55,7 @@ uvicorn app:app --reload --host 0.0.0.0 --port 8000
 
 Backend env:
 - `DATABASE_URL` (default: `postgresql+psycopg://iihf:iihf@localhost:5432/iihf`)
+- `backend/.env` is loaded automatically on startup.
 
 ### Frontend
 ```
