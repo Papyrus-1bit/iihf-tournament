@@ -7,35 +7,31 @@ interface Props {
   size?: number;
 }
 
-const EXTENSIONS = ["svg", "png", "webp", "jpg", "jpeg"] as const;
+const EXTENSIONS = ["png", "svg", "webp", "jpg", "jpeg"] as const;
 
-const LOGO_ALIASES: Record<string, string[]> = {
-  AT: ["au"],
-  BY: ["rb"],
-  CA: ["cn"],
-  CH: ["sw"],
-  DE: ["gr"],
-  DK: ["dn"],
+const LOGO_NAME_OVERRIDES: Record<string, string[]> = {
+  AT: ["austria"],
+  CH: ["swiss"],
   FI: ["fn"],
-  HU: ["hg"],
-  NO: ["nw"],
-  SE: ["sn", "sl"],
-  SI: ["sv"],
-  SK: ["sl"],
+  GB: ["great britain"],
+  RU: ["russia"],
+  SI: ["slovenia"],
 };
 
 const buildSources = (code: string) => {
-  const upper = code.toUpperCase();
-  const lower = code.toLowerCase();
-  const aliases = [lower, ...(LOGO_ALIASES[upper] ?? [])];
+  const upper = code.trim().toUpperCase();
+  const lower = upper.toLowerCase();
+  const names = [...(LOGO_NAME_OVERRIDES[upper] ?? []), lower];
+
   const sources: string[] = [];
-  aliases.forEach((alias) => {
+  names.forEach((name) => {
+    const encodedName = encodeURIComponent(name);
     EXTENSIONS.forEach((ext) => {
-      sources.push(`/federations/${alias}.${ext}`);
+      sources.push(`/federations/${encodedName}.${ext}`);
     });
   });
-  sources.push(`/svg/${lower}.svg`);
-  return Array.from(new Set(sources));
+
+  return sources;
 };
 
 const FederationLogo: FC<Props> = ({ code, name, size = 28 }) => {
@@ -47,10 +43,14 @@ const FederationLogo: FC<Props> = ({ code, name, size = 28 }) => {
   }, [sources]);
 
   const src = sources[sourceIndex];
-  const isRaster = /\.(png|jpe?g|webp)$/i.test(src ?? "");
 
   return (
-    <span className="federation-logo" style={{ width: size, height: size }}>
+    <span
+      className={`federation-logo${src ? "" : " federation-logo--placeholder"}`}
+      style={{ width: size, height: size }}
+      aria-label={name}
+      title={name}
+    >
       {src ? (
         <img
           src={src}
@@ -58,7 +58,7 @@ const FederationLogo: FC<Props> = ({ code, name, size = 28 }) => {
           width={size}
           height={size}
           onError={() => setSourceIndex((prev) => prev + 1)}
-          className={`federation-logo__img${isRaster ? " federation-logo__img--blend" : ""}`}
+          className="federation-logo__img"
           loading="lazy"
         />
       ) : (
