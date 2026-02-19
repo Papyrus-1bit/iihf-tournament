@@ -46,15 +46,24 @@ export interface RosterPlayer {
   position: "F" | "D" | "G" | string;
   club?: string;
   overall?: number | null;
+  photo_url?: string | null;
   jersey_number?: number | null;
   shoots?: string | null;
   source?: string | null;
 }
 
+export interface TeamLine {
+  name: string;
+  player_ids: string[];
+}
+
 export interface TeamRoster {
   code: string;
   name: string;
+  team_ovr?: number | null;
+  players?: RosterPlayer[];
   forwards: RosterPlayer[];
   defensemen: RosterPlayer[];
   goalies: RosterPlayer[];
+  lineups?: Record<string, TeamLine[]>;
 }

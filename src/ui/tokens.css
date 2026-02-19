@@ -905,15 +905,16 @@
 }
 
 .roster-panel {
-  background: rgba(8, 10, 14, 0.92);
+  background: rgba(8, 10, 14, 0.9);
   box-shadow: none;
 }
 
 .roster-header {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 14px;
-  align-items: baseline;
+  gap: 8px 16px;
+  align-items: flex-end;
+  justify-content: space-between;
   margin-bottom: 12px;
 }
 
@@ -921,53 +922,128 @@
   font-family: "Barlow Condensed", "Barlow", sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 }
 
-.roster-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+.roster-header-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
 }
 
-.roster-group {
-  min-width: 0;
-}
-
-.roster-group-title {
+.roster-team-ovr {
   font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ui-muted);
+}
+
+.roster-collapse-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ui-text);
+  padding: 6px 12px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.roster-tab-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.roster-tab-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ui-muted);
+  padding: 5px 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.roster-tab-btn[data-active="true"] {
+  background: rgba(34, 197, 94, 0.2);
+  color: #e7fff0;
+}
+
+.roster-line-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.roster-line-card {
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.roster-line-name {
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ui-muted);
   margin-bottom: 8px;
 }
 
-.roster-list {
+.roster-player-grid {
   display: grid;
-  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
 }
 
-.roster-item {
-  padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border-left: 2px solid rgba(245, 245, 247, 0.2);
+.roster-player-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(14, 15, 19, 0.88);
+  min-width: 0;
 }
 
-.roster-item-name {
-  font-size: 13px;
-  line-height: 1.2;
+.roster-player-position {
+  font-size: 10px;
+  color: var(--ui-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.roster-player-avatar {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.roster-player-name {
+  font-size: 12px;
   font-weight: 600;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.roster-item-meta {
-  margin-top: 2px;
-  font-size: 11px;
+.roster-player-club,
+.roster-player-ovr {
+  font-size: 10px;
   color: var(--ui-muted);
   line-height: 1.2;
 }
 
+.roster-player-ovr {
+  color: var(--ui-text);
+}
+
 .roster-empty {
+  margin-top: 6px;
   font-size: 12px;
   color: var(--ui-muted);
 }
@@ -1904,7 +1980,17 @@
     font-size: 10px;
   }
 
-  .roster-grid {
-    grid-template-columns: 1fr;
+  .roster-header {
+    align-items: flex-start;
+  }
+
+  .roster-header-meta {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .roster-player-grid {
+    grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
   }
 }
