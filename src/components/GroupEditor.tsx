@@ -278,12 +278,7 @@ const GroupEditor: FC<Props> = ({
           Дивизион 3
         </Button>
       </Box>
-      <Text fontSize="xs" color="gray.500" mb={2}>
-        Алгоритм учитывает рейтинг, OVR, позицию в IIHF и добавляет случайность в рамках корзин.
-      </Text>
-      <Text fontSize="sm" color="gray.500" mb={3}>
-        Перетаскивайте команды между группами или в блок «Нераспределённые».
-      </Text>
+      <Box mb={2} />
 
       <Box display="grid" gridTemplateColumns="repeat(auto-fit, minmax(220px, 1fr))" gap={3}>
         {groups.map((group, gi) => (
@@ -324,6 +319,7 @@ const GroupEditor: FC<Props> = ({
         ))}
       </Box>
       <Box
+        mt={6}
         mb={4}
         p={3}
         minH="120px"
@@ -332,7 +328,7 @@ const GroupEditor: FC<Props> = ({
         className="group-panel"
       >
         <Text className="ui-section-title" style={{ marginBottom: 8 }}>
-          Нераспределённые команды
+          Замены
         </Text>
         {unassigned.length === 0 && (
           <Text fontSize="sm" color="gray.500">Перетащите команды сюда, чтобы удалить их из групп.</Text>
