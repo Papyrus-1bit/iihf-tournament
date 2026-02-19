@@ -561,7 +561,7 @@
 .team-summary-hero {
   margin-top: 2px;
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 16px 24px;
   flex-wrap: wrap;
@@ -598,6 +598,7 @@
   text-transform: uppercase;
   color: var(--ui-text);
   margin: 0 0 2px 0;
+  line-height: 1;
 }
 
 .team-summary-kicker span {
@@ -638,79 +639,30 @@
 
 .team-summary-right {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-end;
-  gap: 8px;
+  gap: 12px;
+  margin-left: auto;
+  align-self: flex-end;
 }
 
-.team-summary-topstats {
+.team-summary-factoid-label {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  min-height: 48px;
+  padding: 0 10px;
   font-size: 14px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--ui-text);
 }
 
-.team-summary-factoids {
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.team-summary-factoid {
-  width: 56px;
-  min-height: 56px;
-  border-radius: 50%;
-  background: rgba(245, 245, 247, 0.08);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.team-summary-factoid[data-medal="gold"] {
-  background: rgba(243, 201, 82, 0.95);
-  color: #0a0a0d;
-}
-
-.team-summary-factoid[data-medal="silver"] {
-  background: rgba(209, 212, 218, 0.95);
-  color: #0a0a0d;
-}
-
-.team-summary-factoid[data-medal="bronze"] {
-  background: rgba(229, 157, 79, 0.95);
-  color: #0a0a0d;
-}
-
-.team-summary-factoid strong {
-  font-family: "Barlow Condensed", "Barlow", sans-serif;
-  font-size: 30px;
-  line-height: 1;
-  letter-spacing: 0.02em;
-}
-
-.team-summary-factoid span {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: currentColor;
-}
-
-.team-summary-factoid--wide {
-  width: auto;
-  min-width: 140px;
-  border-radius: 18px;
-  padding: 0 12px;
-}
-
 .team-summary-medals-empty {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  min-height: 48px;
+  padding: 0 10px;
 }
 
 .team-summary-medals-stack {
@@ -747,7 +699,7 @@
 
 .team-summary-medals-empty strong {
   font-family: "Barlow Condensed", "Barlow", sans-serif;
-  font-size: 34px;
+  font-size: 30px;
   line-height: 1;
 }
 
@@ -776,6 +728,12 @@
   letter-spacing: 0.04em;
 }
 
+.team-summary-last-games {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .hero-create-button {
   display: inline-flex;
   align-items: center;
@@ -786,6 +744,12 @@
   border: none;
   min-height: 36px;
   align-self: flex-start;
+  cursor: pointer;
+  color: var(--ui-text);
+  font-family: "Barlow Condensed", "Barlow", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 16px;
 }
 
 .hero-create-button:hover {
@@ -796,6 +760,32 @@
 
 .hero-create-button span {
   line-height: 1;
+}
+
+.hero-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+}
+
+.hero-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.summary-table-stack {
+  margin-top: 10px;
+  gap: 20px;
 }
 
 .rating-card-header {
@@ -819,6 +809,13 @@
   object-fit: contain;
   object-position: center;
   display: block;
+  filter:
+    drop-shadow(0 0 0.8px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+}
+
+.federation-logo__img--blend {
+  mix-blend-mode: multiply;
 }
 
 .federation-logo__placeholder {
@@ -878,7 +875,7 @@
 .top-team-form {
   display: flex;
   gap: 6px;
-  margin-top: 6px;
+  margin-top: 0;
 }
 
 .form-dot {
@@ -1561,22 +1558,32 @@
     font-size: 38px;
   }
 
-  .team-summary-factoid {
-    width: 52px;
-    min-height: 52px;
-  }
-
-  .team-summary-factoid strong {
-    font-size: 28px;
-  }
-
-  .team-summary-topstats {
-    font-size: 12px;
-  }
-
   .team-summary-right {
     margin-left: 0;
     align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .team-summary-factoid-label,
+  .team-summary-medals-empty {
+    min-height: 42px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  .team-summary-medals-empty strong {
+    font-size: 24px;
+  }
+
+  .team-summary-medals-stack {
+    width: 44px;
+    height: 28px;
+  }
+
+  .team-summary-medals-stack i {
+    width: 20px;
+    height: 20px;
   }
 
   .win-rate-gauge {

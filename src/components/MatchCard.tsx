@@ -11,6 +11,7 @@ interface Props {
   onUpdate: (updates: Partial<Match>) => void;
   isLocked: boolean;
   playerTeamIds: string[];
+  historyMatches?: Match[];
   useShortNames?: boolean;
   featured?: boolean;
   compact?: boolean;
@@ -21,6 +22,7 @@ const MatchCard: React.FC<Props> = ({
   onUpdate,
   isLocked,
   playerTeamIds,
+  historyMatches = [],
   useShortNames = false,
   featured = false,
   compact = false,
@@ -58,7 +60,11 @@ const MatchCard: React.FC<Props> = ({
 
   const handleSimulate = () => {
     if (!simulateEnabled) return;
-    const result = simulateMatchResult(match.home, match.away);
+    const result = simulateMatchResult(match.home, match.away, {
+      historyMatches,
+      currentMatchId: match.id,
+      stage: match.stage,
+    });
     updateMatch(result.homeGoals, result.awayGoals, result.overtime, result.shootout);
   };
 
@@ -188,7 +194,9 @@ const MatchCard: React.FC<Props> = ({
               onFocus={(e) => e.currentTarget.select()}
             />
             {extraLabel && <span className="match-compact-ot">{extraLabel}</span>}
-            {marker && <span className="match-compact-marker" data-result={marker}>{marker}</span>}
+            <span className="match-compact-marker" data-result={marker ?? "E"}>
+              {marker ?? ""}
+            </span>
           </span>
           <Box className="match-compact-team right">
             <span>{getShortName(match.away.name)}</span>
@@ -227,20 +235,20 @@ const MatchCard: React.FC<Props> = ({
             ? roundLabels[match.round] ?? match.round
             : "Матч"}
         </span>
-        {marker && (
-          <span
-            className="match-card-marker"
-            style={{
-              color: marker.endsWith("W")
+        <span
+          className="match-card-marker"
+          style={{
+            color: marker
+              ? marker.endsWith("W")
                 ? "#22c55e"
                 : marker === "T"
                 ? "rgba(245,245,247,0.6)"
-                : "#ef4444",
-            }}
-          >
-            {marker}
-          </span>
-        )}
+                : "#ef4444"
+              : "transparent",
+          }}
+        >
+          {marker ?? "000"}
+        </span>
       </Box>
       <Box className="match-card-main">
         <Box className="match-team">

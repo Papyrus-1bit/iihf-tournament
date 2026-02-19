@@ -19,9 +19,9 @@ const LOGO_ALIASES: Record<string, string[]> = {
   FI: ["fn"],
   HU: ["hg"],
   NO: ["nw"],
-  SE: ["sl", "sn"],
+  SE: ["sn", "sl"],
   SI: ["sv"],
-  SK: ["sl", "sn"],
+  SK: ["sl"],
 };
 
 const buildSources = (code: string) => {
@@ -47,6 +47,7 @@ const FederationLogo: FC<Props> = ({ code, name, size = 28 }) => {
   }, [sources]);
 
   const src = sources[sourceIndex];
+  const isRaster = /\.(png|jpe?g|webp)$/i.test(src ?? "");
 
   return (
     <span className="federation-logo" style={{ width: size, height: size }}>
@@ -57,7 +58,7 @@ const FederationLogo: FC<Props> = ({ code, name, size = 28 }) => {
           width={size}
           height={size}
           onError={() => setSourceIndex((prev) => prev + 1)}
-          className="federation-logo__img"
+          className={`federation-logo__img${isRaster ? " federation-logo__img--blend" : ""}`}
           loading="lazy"
         />
       ) : (

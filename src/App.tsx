@@ -1430,11 +1430,6 @@ function App() {
   const selectedPodium = teamSummary
     ? podiumBase[teamSummary.team.id] ?? emptyPodium()
     : emptyPodium();
-  const medalItems = [
-    { key: "gold", value: selectedPodium.gold },
-    { key: "silver", value: selectedPodium.silver },
-    { key: "bronze", value: selectedPodium.bronze },
-  ].filter((item) => item.value > 0);
   const medalsTotal = selectedPodium.gold + selectedPodium.silver + selectedPodium.bronze;
   const winGaugeColor =
     (teamSummary?.winPct ?? 0) > 50
@@ -1462,8 +1457,8 @@ function App() {
       {teamsError && <Text color="red.500">{teamsError}</Text>}
       <Box className="ui-stack">
         <Box className="hero-bar" data-testid="tournament-hero">
-          <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={3} flexWrap="wrap">
-            <Box display="flex" flexDirection="column" gap={2}>
+          <Box className="hero-head-row">
+            <Box className="hero-brand">
               <img
                 src="/iihf-logo2.svg"
                 alt="IIHF"
@@ -1476,10 +1471,10 @@ function App() {
                 <Text className="ui-subtitle">{tournamentName.trim()}</Text>
               )}
             </Box>
-            <Box display="flex" gap={1} alignItems="center">
+            <Box className="hero-actions">
               <button
                 type="button"
-                className="ui-button hero-create-button"
+                className="hero-create-button"
                 onClick={() => setIsSetupOpen(true)}
                 title="Создать турнир"
                 aria-label="Создать турнир"
@@ -1566,7 +1561,7 @@ function App() {
           </>
         )}
       </Box>
-      <Box className="ui-stack">
+      <Box className="ui-stack summary-table-stack">
         <Box className="ui-card team-summary-card" data-testid="team-summary-card">
           {teamSummary ? (
             <>
@@ -1592,46 +1587,29 @@ function App() {
                   </Box>
                 </Box>
                 <Box className="team-summary-right">
-                  <Box className="team-summary-topstats">
-                    <span>{teamSummary.played} матчей</span>
-                    <span>{teamSummary.winPct}% побед</span>
-                    <div
-                      className="win-rate-gauge"
-                      style={{
-                        background: `conic-gradient(${winGaugeColor} ${winGaugeAngle}deg, rgba(255,255,255,0.14) 0deg)`,
-                      }}
-                    >
-                      <div className="win-rate-gauge__inner">
-                        <strong>{teamSummary.winPct}%</strong>
-                      </div>
+                  <span className="team-summary-factoid-label">{teamSummary.played} матчей</span>
+                  <div
+                    className="win-rate-gauge"
+                    style={{
+                      background: `conic-gradient(${winGaugeColor} ${winGaugeAngle}deg, rgba(255,255,255,0.14) 0deg)`,
+                    }}
+                  >
+                    <div className="win-rate-gauge__inner">
+                      <strong>{teamSummary.winPct}%</strong>
                     </div>
+                  </div>
+                  <Box className="team-summary-medals-empty">
+                    <span className="team-summary-medals-stack">
+                      <i data-medal="gold" />
+                      <i data-medal="silver" />
+                      <i data-medal="bronze" />
+                    </span>
+                    <strong>{medalsTotal}</strong>
                   </Box>
-                  {medalItems.length > 0 ? (
-                    <Box className="team-summary-factoids">
-                      {medalItems.map((item) => (
-                        <div
-                          key={item.key}
-                          className="team-summary-factoid"
-                          data-medal={item.key}
-                        >
-                          <strong>{item.value}</strong>
-                        </div>
-                      ))}
-                    </Box>
-                  ) : (
-                    <Box className="team-summary-medals-empty">
-                      <span className="team-summary-medals-stack">
-                        <i data-medal="gold" />
-                        <i data-medal="silver" />
-                        <i data-medal="bronze" />
-                      </span>
-                      <strong>{medalsTotal}</strong>
-                    </Box>
-                  )}
                 </Box>
               </Box>
               {teamSummary.last10.length > 0 && (
-                <Box mt={3}>
+                <Box mt={3} className="team-summary-last-games">
                   <Text className="ui-subtitle">Последние игры</Text>
                   <Box className="top-team-form">
                     {teamSummary.last10.map((result, index) => (

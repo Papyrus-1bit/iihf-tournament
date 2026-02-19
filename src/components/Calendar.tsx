@@ -93,6 +93,16 @@ const Calendar: React.FC<Props> = ({
     return null;
   }, [allMatches]);
 
+  useEffect(() => {
+    if (!activeDate) return;
+    requestAnimationFrame(() => {
+      const el = scrollRef.current?.querySelector(
+        `[data-date="${activeDate}"]`
+      ) as HTMLElement | null;
+      el?.scrollIntoView({ behavior: "smooth", inline: "start", block: "nearest" });
+    });
+  }, [activeDate, orderedDates]);
+
   const focusNextDate = (date: string) => {
     const index = orderedDates.indexOf(date);
     if (index === -1) return;
@@ -114,7 +124,11 @@ const Calendar: React.FC<Props> = ({
         hasSelection &&
         (playerTeamIds.includes(match.home.id) || playerTeamIds.includes(match.away.id));
       if (isPlayerMatch) return;
-      const result = simulateMatchResult(match.home, match.away);
+      const result = simulateMatchResult(match.home, match.away, {
+        historyMatches: allMatches,
+        currentMatchId: match.id,
+        stage: match.stage,
+      });
       onUpdateMatch(match.id, {
         homeScore: result.homeGoals,
         awayScore: result.awayGoals,
@@ -233,6 +247,7 @@ const Calendar: React.FC<Props> = ({
                   onUpdate={(updates) => onUpdateMatch(match.id, updates)}
                   isLocked={activeDate !== null && match.date > activeDate}
                   playerTeamIds={playerTeamIds}
+                  historyMatches={allMatches}
                   useShortNames
                   featured={index === 0}
                   compact={hasSelection && viewMode === "all" && !isSelectedMatch}
@@ -278,6 +293,7 @@ const Calendar: React.FC<Props> = ({
                           onUpdate={(updates) => onUpdateMatch(match.id, updates)}
                           isLocked={activeDate !== null && match.date > activeDate}
                           playerTeamIds={playerTeamIds}
+                          historyMatches={allMatches}
                           useShortNames
                           compact
                         />
