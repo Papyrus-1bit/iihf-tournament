@@ -1,6 +1,6 @@
 {
   "RU": {
-    "updated_at": "2026-02-19T22:07:06.839822+00:00",
+    "updated_at": "2026-02-20T08:08:38.448786+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -282,7 +282,7 @@
     ]
   },
   "US": {
-    "updated_at": "2026-02-19T22:07:06.840056+00:00",
+    "updated_at": "2026-02-20T08:08:38.449185+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -564,7 +564,7 @@
     ]
   },
   "CH": {
-    "updated_at": "2026-02-19T22:07:06.840163+00:00",
+    "updated_at": "2026-02-20T08:08:38.449318+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -846,7 +846,7 @@
     ]
   },
   "CA": {
-    "updated_at": "2026-02-19T22:07:06.840447+00:00",
+    "updated_at": "2026-02-20T08:08:38.449603+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -1128,7 +1128,7 @@
     ]
   },
   "SE": {
-    "updated_at": "2026-02-19T22:07:06.840552+00:00",
+    "updated_at": "2026-02-20T08:08:38.449699+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -1410,7 +1410,7 @@
     ]
   },
   "CZ": {
-    "updated_at": "2026-02-19T22:07:06.840632+00:00",
+    "updated_at": "2026-02-20T08:08:38.449774+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -1692,7 +1692,7 @@
     ]
   },
   "FI": {
-    "updated_at": "2026-02-19T22:07:06.840706+00:00",
+    "updated_at": "2026-02-20T08:08:38.449848+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -1974,7 +1974,7 @@
     ]
   },
   "DE": {
-    "updated_at": "2026-02-19T22:07:06.840794+00:00",
+    "updated_at": "2026-02-20T08:08:38.449932+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -2256,7 +2256,7 @@
     ]
   },
   "DK": {
-    "updated_at": "2026-02-19T22:07:06.840881+00:00",
+    "updated_at": "2026-02-20T08:08:38.450016+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -2538,7 +2538,7 @@
     ]
   },
   "SK": {
-    "updated_at": "2026-02-19T22:07:06.840964+00:00",
+    "updated_at": "2026-02-20T08:08:38.450094+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -2820,7 +2820,7 @@
     ]
   },
   "LV": {
-    "updated_at": "2026-02-19T22:07:06.841048+00:00",
+    "updated_at": "2026-02-20T08:08:38.450177+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -3102,7 +3102,7 @@
     ]
   },
   "AT": {
-    "updated_at": "2026-02-19T22:07:06.841139+00:00",
+    "updated_at": "2026-02-20T08:08:38.450266+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -3384,7 +3384,7 @@
     ]
   },
   "NO": {
-    "updated_at": "2026-02-19T22:07:06.841229+00:00",
+    "updated_at": "2026-02-20T08:08:38.450358+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -3666,7 +3666,7 @@
     ]
   },
   "KZ": {
-    "updated_at": "2026-02-19T22:07:06.841332+00:00",
+    "updated_at": "2026-02-20T08:08:38.450449+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -3948,7 +3948,7 @@
     ]
   },
   "FR": {
-    "updated_at": "2026-02-19T22:07:06.841427+00:00",
+    "updated_at": "2026-02-20T08:08:38.450536+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -4230,7 +4230,7 @@
     ]
   },
   "BY": {
-    "updated_at": "2026-02-19T22:07:06.841519+00:00",
+    "updated_at": "2026-02-20T08:08:38.450626+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -4512,7 +4512,7 @@
     ]
   },
   "SI": {
-    "updated_at": "2026-02-19T22:07:06.841609+00:00",
+    "updated_at": "2026-02-20T08:08:38.450713+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -4794,7 +4794,7 @@
     ]
   },
   "HU": {
-    "updated_at": "2026-02-19T22:07:06.841700+00:00",
+    "updated_at": "2026-02-20T08:08:38.450801+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -5076,7 +5076,7 @@
     ]
   },
   "GB": {
-    "updated_at": "2026-02-19T22:07:06.841794+00:00",
+    "updated_at": "2026-02-20T08:08:38.450896+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -5358,7 +5358,7 @@
     ]
   },
   "IT": {
-    "updated_at": "2026-02-19T22:07:06.841889+00:00",
+    "updated_at": "2026-02-20T08:08:38.451005+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -5640,7 +5640,7 @@
     ]
   },
   "PL": {
-    "updated_at": "2026-02-19T22:07:06.841979+00:00",
+    "updated_at": "2026-02-20T08:08:38.451094+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -5922,7 +5922,7 @@
     ]
   },
   "JP": {
-    "updated_at": "2026-02-19T22:07:06.842067+00:00",
+    "updated_at": "2026-02-20T08:08:38.451185+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -6204,7 +6204,7 @@
     ]
   },
   "UA": {
-    "updated_at": "2026-02-19T22:07:06.842162+00:00",
+    "updated_at": "2026-02-20T08:08:38.451278+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -6486,7 +6486,7 @@
     ]
   },
   "LT": {
-    "updated_at": "2026-02-19T22:07:06.842285+00:00",
+    "updated_at": "2026-02-20T08:08:38.451365+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -6768,7 +6768,7 @@
     ]
   },
   "KR": {
-    "updated_at": "2026-02-19T22:07:06.842567+00:00",
+    "updated_at": "2026-02-20T08:08:38.451453+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -7050,7 +7050,7 @@
     ]
   },
   "EE": {
-    "updated_at": "2026-02-19T22:07:06.842695+00:00",
+    "updated_at": "2026-02-20T08:08:38.451543+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -7332,7 +7332,7 @@
     ]
   },
   "NL": {
-    "updated_at": "2026-02-19T22:07:06.842955+00:00",
+    "updated_at": "2026-02-20T08:08:38.451660+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -7614,7 +7614,7 @@
     ]
   },
   "RO": {
-    "updated_at": "2026-02-19T22:07:06.843163+00:00",
+    "updated_at": "2026-02-20T08:08:38.451750+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -7896,7 +7896,7 @@
     ]
   },
   "CN": {
-    "updated_at": "2026-02-19T22:07:06.843263+00:00",
+    "updated_at": "2026-02-20T08:08:38.451841+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -8178,7 +8178,7 @@
     ]
   },
   "RS": {
-    "updated_at": "2026-02-19T22:07:06.843369+00:00",
+    "updated_at": "2026-02-20T08:08:38.451943+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -8460,7 +8460,7 @@
     ]
   },
   "HR": {
-    "updated_at": "2026-02-19T22:07:06.843586+00:00",
+    "updated_at": "2026-02-20T08:08:38.452031+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {
@@ -8742,7 +8742,7 @@
     ]
   },
   "ES": {
-    "updated_at": "2026-02-19T22:07:06.843683+00:00",
+    "updated_at": "2026-02-20T08:08:38.452127+00:00",
     "source": "NHL API + generated placeholders",
     "players": [
       {

@@ -1738,7 +1738,6 @@ function App() {
 
         <TeamRosterPanel
           roster={selectedRoster}
-          teamName={teamSummary?.team.name}
           loading={rostersLoading}
         />
         {rostersError && (
