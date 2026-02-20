@@ -904,6 +904,730 @@
   margin-top: 8px;
 }
 
+.roster-panel {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(245, 184, 66, 0.16), transparent 54%),
+    radial-gradient(130% 120% at 0% 0%, rgba(85, 110, 156, 0.14), transparent 62%),
+    linear-gradient(145deg, rgba(13, 14, 19, 0.97), rgba(8, 9, 13, 0.98));
+  border: 1px solid rgba(232, 185, 79, 0.3);
+  box-shadow: none;
+}
+
+.roster-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.roster-title {
+  font-family: "Barlow Condensed", "Barlow", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0;
+}
+
+.roster-header-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.roster-team-ovr {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f4d58e;
+  font-weight: 700;
+}
+
+.roster-collapse-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ui-text);
+  padding: 6px 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.22s ease, transform 0.22s ease;
+}
+
+.roster-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+}
+
+.roster-collapse-arrow {
+  display: inline-block;
+  transition: transform 0.26s ease;
+}
+
+.roster-collapse-arrow[data-expanded="true"] {
+  transform: rotate(180deg);
+}
+
+.roster-collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    grid-template-rows 0.35s cubic-bezier(0.33, 1, 0.68, 1),
+    opacity 0.28s ease,
+    transform 0.3s ease;
+  margin-top: 2px;
+}
+
+.roster-collapsible[data-expanded="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.roster-collapsible-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.roster-tab-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.roster-tab-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ui-muted);
+  padding: 5px 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.roster-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.roster-tab-btn[data-active="true"] {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.26), rgba(53, 131, 255, 0.24));
+  color: #f4fbff;
+  box-shadow: inset 0 0 0 1px rgba(138, 240, 189, 0.35);
+}
+
+.roster-lineup-stage {
+  display: grid;
+  gap: 12px;
+  animation: rosterFadeIn 0.36s ease both;
+}
+
+.roster-lineup-stage--overview {
+  gap: 14px;
+}
+
+.roster-overview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 14px;
+}
+
+.roster-overview-col {
+  display: grid;
+  gap: 14px;
+}
+
+.roster-role-block {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.roster-role-title {
+  margin: 0;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Barlow Condensed", "Barlow", sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #e8b94f;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.roster-role-title::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 10px;
+  bottom: 10px;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(232, 185, 79, 0.05), rgba(232, 185, 79, 0.8), rgba(232, 185, 79, 0.05));
+}
+
+.roster-role-content {
+  min-width: 0;
+}
+
+.roster-role-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.roster-role-grid[data-role="forward"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.roster-role-grid[data-role="defense"],
+.roster-role-grid[data-role="goalie"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.roster-role-grid[data-role="mixed"] {
+  grid-template-columns: repeat(auto-fit, minmax(156px, 1fr));
+}
+
+.roster-line-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  animation: rosterFadeIn 0.36s ease both;
+}
+
+.roster-line-card {
+  padding: 10px;
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(73, 163, 255, 0.08), transparent 70%),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(245, 245, 247, 0.13);
+}
+
+.roster-line-name {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 247, 0.72);
+  margin-bottom: 8px;
+}
+
+.roster-player-grid {
+  display: grid;
+  gap: 8px;
+  align-items: start;
+}
+
+.roster-player-grid[data-slots="1"] {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.roster-player-grid[data-slots="2"] {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.roster-player-grid[data-slots="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.roster-player-grid[data-slots="4"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.roster-player-grid[data-slots="5"] {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.roster-player-grid[data-slots="6"] {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.roster-player-card {
+  --card-height: 332px;
+  --card-name-size: 20px;
+  --card-number-size: 92px;
+  --card-meta-size: 11px;
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  appearance: none;
+  cursor: pointer;
+  font: inherit;
+  min-height: var(--card-height);
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(245, 245, 247, 0.24);
+  border-radius: 0;
+  background: linear-gradient(180deg, #202126 0%, #1a1b20 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 8px 16px rgba(0, 0, 0, 0.4);
+  min-width: 0;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    filter 0.22s ease;
+}
+
+.roster-player-card:hover {
+  transform: translateY(-1px) scale(1.006);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 12px 24px rgba(0, 0, 0, 0.52);
+  border-color: rgba(245, 245, 247, 0.42);
+  filter: brightness(1.02);
+}
+
+.roster-player-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 95% at 50% 0%, rgba(255, 255, 255, 0.06), transparent 56%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.03) 0%, rgba(0, 0, 0, 0.08) 52%, rgba(0, 0, 0, 0.56) 100%);
+  z-index: 0;
+}
+
+.roster-player-card[data-tier="elite"] {
+  border-color: rgba(245, 245, 247, 0.24);
+}
+
+.roster-player-card[data-tier="prime"] {
+  border-color: rgba(245, 245, 247, 0.24);
+}
+
+.roster-player-card[data-tier="core"] {
+  border-color: rgba(245, 245, 247, 0.24);
+}
+
+.roster-player-card[data-tier="depth"] {
+  border-color: rgba(245, 245, 247, 0.24);
+}
+
+.roster-player-card[data-tier="base"] {
+  border-color: rgba(245, 245, 247, 0.24);
+}
+
+.roster-player-media {
+  position: relative;
+  z-index: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: #1a1d25;
+}
+
+.roster-player-media::before {
+  content: "";
+  position: absolute;
+  left: -12%;
+  right: -6%;
+  top: 62%;
+  height: 74px;
+  background: rgba(8, 10, 14, 0.8);
+  transform: skewY(-10deg);
+  z-index: 2;
+}
+
+.roster-player-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.14) 60%, rgba(8, 10, 14, 0.66) 100%);
+  z-index: 1;
+}
+
+.roster-player-avatar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 10%;
+  background: rgba(255, 255, 255, 0.06);
+  z-index: 0;
+}
+
+.roster-player-avatar-placeholder {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(140% 100% at 50% 0%, rgba(122, 145, 174, 0.28), transparent 58%),
+    linear-gradient(180deg, rgba(37, 44, 58, 0.95), rgba(25, 31, 43, 0.95));
+  color: rgba(233, 239, 255, 0.8);
+  font-size: 46px;
+}
+
+.roster-player-team {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+
+.roster-player-team-logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+}
+
+.roster-player-team-placeholder {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(245, 245, 247, 0.72);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(245, 245, 247, 0.25);
+}
+
+.roster-player-team-code {
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(245, 245, 247, 0.88);
+}
+
+.roster-player-country {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0;
+}
+
+.roster-player-info {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  gap: 3px;
+  text-align: left;
+  padding: 7px 8px 9px;
+  background: linear-gradient(180deg, rgba(14, 15, 19, 0.76), rgba(14, 15, 19, 0.97));
+}
+
+.roster-player-meta-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.roster-player-meta {
+  margin: 0;
+  font-size: var(--card-meta-size);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(245, 245, 247, 0.9);
+}
+
+.roster-player-number {
+  display: block;
+  font-family: "Barlow Condensed", "Barlow", sans-serif;
+  font-size: var(--card-number-size);
+  line-height: 0.82;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: rgba(245, 245, 247, 0.96);
+  -webkit-text-stroke: 2px rgba(0, 0, 0, 0.62);
+  text-shadow: 0 8px 18px rgba(0, 0, 0, 0.58);
+}
+
+.roster-player-name {
+  font-size: var(--card-name-size);
+  font-weight: 700;
+  line-height: 1.08;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  color: rgba(245, 201, 87, 0.98);
+  text-shadow: 0 2px 7px rgba(0, 0, 0, 0.46);
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  min-height: 2.15em;
+}
+
+.roster-player-card--compact {
+  --card-height: 214px;
+  --card-name-size: 14px;
+  --card-number-size: 78px;
+  --card-meta-size: 11px;
+  width: 100%;
+}
+
+.roster-player-card--compact .roster-player-meta {
+  font-size: 10px;
+}
+
+.roster-player-card--compact .roster-player-info {
+  gap: 2px;
+  padding: 6px 7px 7px;
+}
+
+.roster-player-card--compact .roster-player-team {
+  top: 7px;
+  right: 7px;
+}
+
+.roster-player-card--compact .roster-player-team-logo,
+.roster-player-card--compact .roster-player-team-placeholder {
+  width: 25px;
+  height: 25px;
+}
+
+.roster-player-card--compact .roster-player-team-code {
+  font-size: 9px;
+}
+
+.roster-player-card--compact .roster-player-country {
+  margin-top: 1px;
+}
+
+.roster-player-card--compact .roster-player-number {
+  line-height: 0.78;
+  -webkit-text-stroke: 1.4px rgba(0, 0, 0, 0.72);
+}
+
+.roster-player-card--modal {
+  width: 100%;
+  --card-height: 406px;
+  --card-name-size: 33px;
+  --card-number-size: 140px;
+  --card-meta-size: 16px;
+  min-height: var(--card-height);
+  cursor: default;
+}
+
+.roster-player-card--modal .roster-player-team {
+  top: 10px;
+  right: 10px;
+}
+
+.roster-player-card--modal .roster-player-team-logo,
+.roster-player-card--modal .roster-player-team-placeholder {
+  width: 42px;
+  height: 42px;
+}
+
+.roster-player-card--modal .roster-player-team-code {
+  font-size: 12px;
+}
+
+.roster-player-card--modal .roster-player-info {
+  padding: 10px 12px 12px;
+}
+
+.roster-player-card--modal .roster-player-meta-line {
+  gap: 6px;
+}
+
+.roster-player-card--modal:hover {
+  transform: none;
+  filter: none;
+}
+
+.roster-empty {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--ui-muted);
+}
+
+.roster-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  background: rgba(4, 6, 10, 0.74);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  animation: rosterModalIn 0.24s ease both;
+}
+
+.roster-modal {
+  width: min(760px, 100%);
+  max-height: min(88vh, 880px);
+  overflow: auto;
+  background:
+    radial-gradient(100% 100% at 100% 0%, rgba(232, 185, 79, 0.16), transparent 58%),
+    linear-gradient(180deg, rgba(17, 20, 27, 0.98), rgba(10, 12, 17, 0.99));
+  border: 1px solid rgba(232, 185, 79, 0.5);
+  box-shadow: 0 24px 52px rgba(0, 0, 0, 0.62);
+  padding: 14px;
+  position: relative;
+}
+
+.roster-modal-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.roster-modal-card-preview {
+  position: sticky;
+  top: 4px;
+}
+
+.roster-modal-right {
+  min-width: 0;
+}
+
+.roster-modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.roster-modal-head {
+  margin-bottom: 12px;
+}
+
+.roster-modal-name {
+  font-family: "Barlow Condensed", "Barlow", sans-serif;
+  font-size: 34px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.roster-modal-role {
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(245, 245, 247, 0.72);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.roster-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.roster-modal-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.roster-modal-item span {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 245, 247, 0.62);
+}
+
+.roster-modal-item strong {
+  font-size: 13px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.roster-modal-lines {
+  margin-top: 12px;
+}
+
+.roster-modal-lines-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 245, 247, 0.62);
+  margin-bottom: 6px;
+}
+
+.roster-modal-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.roster-modal-tag {
+  display: inline-flex;
+  padding: 4px 8px;
+  background: rgba(232, 185, 79, 0.16);
+  color: #f5dca6;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+.roster-modal-source {
+  margin-top: 12px;
+  font-size: 11px;
+  color: rgba(245, 245, 247, 0.55);
+}
+
+@keyframes rosterFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rosterModalIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .hero-floating-nav {
   position: fixed;
   bottom: max(16px, env(safe-area-inset-bottom));
@@ -1834,5 +2558,157 @@
 
   .win-rate-gauge__inner strong {
     font-size: 10px;
+  }
+
+  .roster-header {
+    align-items: flex-start;
+  }
+
+  .roster-header-meta {
+    margin-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .roster-overview-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .roster-overview-col {
+    gap: 12px;
+  }
+
+  .roster-role-block {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .roster-role-title {
+    font-size: 18px;
+  }
+
+  .roster-role-grid[data-role="forward"],
+  .roster-role-grid[data-role="defense"],
+  .roster-role-grid[data-role="goalie"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .roster-player-grid[data-slots="5"],
+  .roster-player-grid[data-slots="6"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .roster-player-card {
+    width: 100%;
+    --card-height: 282px;
+    --card-name-size: 17px;
+    --card-number-size: 70px;
+  }
+
+  .roster-player-card--compact {
+    --card-height: 206px;
+    --card-name-size: 14px;
+    --card-number-size: 68px;
+    --card-meta-size: 10px;
+  }
+
+  .roster-player-card--compact .roster-player-team-logo,
+  .roster-player-card--compact .roster-player-team-placeholder {
+    width: 22px;
+    height: 22px;
+  }
+
+  .roster-modal-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .roster-modal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .roster-tab-row {
+    gap: 5px;
+  }
+
+  .roster-tab-btn {
+    font-size: 10px;
+    padding: 5px 8px;
+  }
+
+  .roster-role-block {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .roster-role-title {
+    writing-mode: horizontal-tb;
+    transform: none;
+    justify-content: flex-start;
+    padding: 0 0 5px;
+    letter-spacing: 0.1em;
+  }
+
+  .roster-role-title::after {
+    right: auto;
+    left: 0;
+    top: auto;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(232, 185, 79, 0.05), rgba(232, 185, 79, 0.8), rgba(232, 185, 79, 0.05));
+  }
+
+  .roster-role-grid[data-role="forward"],
+  .roster-role-grid[data-role="defense"],
+  .roster-role-grid[data-role="goalie"],
+  .roster-role-grid[data-role="mixed"],
+  .roster-player-grid[data-slots="3"],
+  .roster-player-grid[data-slots="4"],
+  .roster-player-grid[data-slots="5"],
+  .roster-player-grid[data-slots="6"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .roster-player-card {
+    width: 100%;
+    --card-height: 242px;
+    --card-name-size: 15px;
+    --card-number-size: 56px;
+    --card-meta-size: 10px;
+  }
+
+  .roster-player-card .roster-player-team {
+    top: 7px;
+    right: 7px;
+  }
+
+  .roster-player-card .roster-player-team-logo,
+  .roster-player-card .roster-player-team-placeholder {
+    width: 24px;
+    height: 24px;
+  }
+
+  .roster-player-card .roster-player-number {
+    -webkit-text-stroke: 1.6px rgba(0, 0, 0, 0.65);
+  }
+
+  .roster-player-card--compact {
+    --card-height: 194px;
+    --card-name-size: 13px;
+    --card-number-size: 42px;
+    --card-meta-size: 9px;
+  }
+
+  .roster-player-card--compact .roster-player-team-logo,
+  .roster-player-card--compact .roster-player-team-placeholder {
+    width: 20px;
+    height: 20px;
+  }
+
+  .roster-modal-grid {
+    grid-template-columns: 1fr;
   }
 }
